@@ -27,3 +27,53 @@ public class Wardrobe {
         items.remove(item);
     }
 }
+// Creating methods to get specific type of clothing items
+    // which will be then displayed in different sections of the GUI
+    
+    public ArrayList<top> getTops() {
+    // Creating a new arraylist that will store tops
+    ArrayList<top> result = new ArrayList<>();
+    for (ClothingItems item : items) {
+    // Using the instanceof operator to check if the item is of type top
+    // If it is, we implicitly cast it from type clothing items to type top
+    //And add it to the result arraylist that stores only tops
+        if (item instanceof top) result.add((top) item);
+    }
+    return result;
+}
+
+//Repeating the same process for other clothing items
+
+public ArrayList<bottom> getBottoms() {
+    ArrayList<bottom> result = new ArrayList<>();
+    for (ClothingItems item : items) {
+        if (item instanceof bottom) result.add((bottom) item);
+    }
+    return result;
+}
+
+public ArrayList<shoes> getShoes() {
+    ArrayList<shoes> result = new ArrayList<>();
+    for (ClothingItems item : items) {
+        if (item instanceof shoes) result.add((shoes) item);
+    }
+    return result;
+}
+
+public ArrayList<outerwear> getOuterwear() {
+    ArrayList<outerwear> result = new ArrayList<>();
+    for (ClothingItems item : items) {
+        if (item instanceof outerwear) result.add((outerwear) item);
+    }
+    return result;
+}
+
+public ArrayList<accessories> getAccessories() {
+    ArrayList<accessories> result = new ArrayList<>();
+    for (ClothingItems item : items) {
+        if (item instanceof accessories) result.add((accessories) item);
+    }
+    return result;
+}
+}
+
