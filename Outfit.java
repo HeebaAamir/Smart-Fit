@@ -1,17 +1,23 @@
 public class Outfit {
+   private String name;
+   private int rating;
    private top Top;
    private bottom Bottom;
    private shoes Shoe;
    private accessories Accessory = null;
    private outerwear OuterWear = null;
 
-   public Outfit (top Top, bottom Bottom, shoes Shoe, accessories Accessory, outerwear OuterWear){
+   public Outfit (String name,top Top, bottom Bottom, shoes Shoe, accessories Accessory, outerwear OuterWear){
+    this.name = name;
     this.Top = Top;
     this.Bottom = Bottom;
     this.Shoe = Shoe;
     this.Accessory = Accessory;
     this.OuterWear = OuterWear;
    }
+   public String getName() { 
+    return name; 
+}
     public void setTop(top Top){
         this.Top = Top;
     }
@@ -42,5 +48,10 @@ public class Outfit {
     public outerwear getOuterwear(){
         return OuterWear;
     }
-
+    public void setRating(int rating) { 
+        this.rating = rating; 
+    }
+    public int getRating() { 
+        return rating; 
+    }
 }
