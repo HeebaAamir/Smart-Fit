@@ -1,4 +1,5 @@
-public class ClothingItems {
+// Making an abstract class ClothingItems that is to serve as the blueprint for other classes.(Abstraction).
+public abstract class ClothingItems {
     private String size;
     private String brand;
     private int price;
@@ -62,6 +63,8 @@ public class ClothingItems {
     public String getSeason() { 
         return season; 
     } 
+    //Abstract method that'll will be overriden in subclasses.(Polymorphism)
+    public abstract String getItemType();
 }
 
 class top extends ClothingItems{
@@ -73,6 +76,10 @@ class top extends ClothingItems{
         this.style = style;
         this.sleeveType = sleeveType;
     }
+    @Override
+    public String getItemType() {
+    return "Top";
+    }
 }
 
 class bottom extends ClothingItems{
@@ -81,6 +88,11 @@ class bottom extends ClothingItems{
     public bottom(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String style){
         super(size, brand, price, fabric, colour, WearCount,season);
         this.style = style;
+    }
+    // The class top is inheriting the getItemType method from the class ClothingItems and using it accordingly.
+    @Override
+    public String getItemType() {
+    return "Bottom";
     }
 }
 
@@ -95,6 +107,10 @@ class shoes extends ClothingItems{
         this.heelSize = heelSize;
         this.openFront = openFront;
     }
+    @Override
+    public String getItemType() {
+    return "Shoe";
+    }
 }
 
 class accessories extends ClothingItems{
@@ -103,6 +119,10 @@ class accessories extends ClothingItems{
     public accessories(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String type){
         super(size, brand, price, fabric, colour, season, WearCount);
         this.type = type;
+    }
+    @Override
+    public String getItemType() {
+    return "Accessory";
     }
 }       
 
@@ -113,5 +133,9 @@ class outerwear extends ClothingItems{
         super(size, brand, price, fabric, colour, season, WearCount);
         this.style = style;
         this.style = style;
+    }
+    @Override
+    public String getItemType() {
+    return "OuterWear";
     }
 }   
