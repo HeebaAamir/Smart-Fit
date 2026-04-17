@@ -12,7 +12,7 @@ public class Wardrobe {
     // ClothingItems item indicate that the method will take any object of the type ClotingItems as all subclasses extend from it.
     public void viewItems(){
         for (ClothingItems item : items ){
-            System.out.println(items);
+            System.out.println(item.getItemType());
         }
     }
 
