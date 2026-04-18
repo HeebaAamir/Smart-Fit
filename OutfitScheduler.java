@@ -60,5 +60,4 @@ public void removeOutfit(LocalDate date, Outfit outfit){
 public boolean hasOutfit(LocalDate date){
     return schedule.containsKey(date) && !schedule.get(date).isEmpty();
 }
- 
 }
