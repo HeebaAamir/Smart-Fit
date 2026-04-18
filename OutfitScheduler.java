@@ -38,14 +38,20 @@ public class OutfitScheduler {
     public void viewAll() {
         for (LocalDate date : schedule.keySet()) {
             System.out.println("Date: " + date);
-
+         
+        for (LocalDate date : schedule.keySet()) {
+            System.out.println("Date: " + date);
+         
             for (Outfit o : schedule.get(date)) {
                 System.out.println(" * " + o);
             }
         }
     }
  
-
+public ArrayList<Outfit> getOutfits(LocalDate date) {
+        return schedule.getOrDefault(date, new ArrayList<>());
+    }
+ 
 //Remove a specific outfit from a date
 public void removeOutfit(LocalDate date, Outfit outfit){
     if (schedule.containsKey(date)) {
