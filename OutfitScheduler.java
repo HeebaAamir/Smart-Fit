@@ -44,4 +44,24 @@ public class OutfitScheduler {
             }
         }
     }
+ 
+ public ArrayList<Outfit> getOutFits (Localdate date){
+    return schedule.getOrDefault(date, new ArrayList<>());
+}
+
+//Remove a specific outfit from a date
+public void removeOutfit(LocalDate date, Outfit outfit){
+    if (schedule.containsKey(date)) {
+        schedule.get(date).remove(outfit);
+        if (schedule.get(date).isEmpty()){
+            schedule.remove(date);
+        }
+    }
+}
+
+//Check if a date has any outfit
+public boolean hasOutfit(LocalDate date){
+    return schedule.containsKey(date) && !schedule.get(date).isEmpty();
+}
+ 
 }
