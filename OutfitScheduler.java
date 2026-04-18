@@ -45,9 +45,6 @@ public class OutfitScheduler {
         }
     }
  
- public ArrayList<Outfit> getOutFits (Localdate date){
-    return schedule.getOrDefault(date, new ArrayList<>());
-}
 
 //Remove a specific outfit from a date
 public void removeOutfit(LocalDate date, Outfit outfit){
