@@ -68,4 +68,9 @@ public void removeOutfit(LocalDate date, Outfit outfit){
 public boolean hasOutfit(LocalDate date){
     return schedule.containsKey(date) && !schedule.get(date).isEmpty();
 }
+ 
+// FileManager uses it to copy schedule data when loading
+ public java.util.HashMap<java.time.LocalDate, java.util.ArrayList<Outfit>> getSchedule() {
+    return schedule;
+}
 }
