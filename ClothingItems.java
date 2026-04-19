@@ -131,7 +131,7 @@ class accessories extends ClothingItems{
     String type;
 
     public accessories(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String type){
-        super(size, brand, price, fabric, colour, season, WearCount,ImagePath);
+        super(size, brand, price, fabric, colour, WearCount, season,ImagePath);
         this.type = type;
     }
     @Override
@@ -144,7 +144,7 @@ class outerwear extends ClothingItems{
     String style;
 
     public outerwear(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String style){
-        super(size, brand, price, fabric, colour, season, WearCount,ImagePath);
+        super(size, brand, price, fabric, colour, WearCount, season,ImagePath);
         this.style = style;
         this.style = style;
     }
