@@ -1,7 +1,10 @@
 // using Array list to have variable number of items in the wardrobe that can change upon user's discretion
 import java.util.ArrayList;
+import java.io.Serializable;
 
 public class Wardrobe {
+private static final long serialVersionUID = 1L; 
+    
     private ArrayList<ClothingItems>items;
 
     public Wardrobe() {
