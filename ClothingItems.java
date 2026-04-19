@@ -1,5 +1,5 @@
 // Importing the serializable interface to implement file handling using serialization that would allow us to reload the saved files.
-import java.io.Serializable
+import java.io.Serializable;
 
 // Making an abstract class ClothingItems that is to serve as the blueprint for other classes.(Abstraction).
 public abstract class ClothingItems implements Serializable {
