@@ -63,9 +63,10 @@ public class App extends Application {
     private static final String STAR_OFF  = "rgba(255,255,255,0.30)";
 
     // ── Shared model ──────────────────────────────────────────────────────
-    private final Wardrobe       wardrobe   = new Wardrobe();
-    private final OutfitManager  outfitMgr  = new OutfitManager();
-    private final OutfitScheduler scheduler = new OutfitScheduler();
+    private final Wardrobe        wardrobe   = FileManager.loadWardrobe();
+    private final OutfitManager   outfitMgr  = FileManager.loadOutfits();
+    private final OutfitScheduler scheduler  = FileManager.loadSchedule();
+
 
     // Current outfit-builder selection
     private top         selTop   = null;
@@ -98,6 +99,9 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         root = new StackPane();
+        // Load saved image paths
+        imgMap.putAll(FileManager.loadImgMap());  
+        
         seedSampleData();
         showHome();
         stage.setScene(new Scene(root, 1120, 700));
