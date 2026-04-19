@@ -78,5 +78,9 @@ public ArrayList<accessories> getAccessories() {
     }
     return result;
 }
+
+public ArrayList<ClothingItems> getAllItems() {
+    return items;
+}
 }
 
