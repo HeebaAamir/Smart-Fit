@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Run SmartFit",
+      "request": "launch",
+      "mainClass": "input",
+      "vmArgs": "--module-path \"C:\\javafx-sdk-26\\javafx-sdk-26\\lib\" --add-modules javafx.controls,javafx.fxml"
+    }
+  ]
+}

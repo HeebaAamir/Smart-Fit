@@ -29,7 +29,7 @@ private static final long serialVersionUID = 1L;
     public void removeItems(ClothingItems item){
         items.remove(item);
     }
-}
+
 // Creating methods to get specific type of clothing items
     // which will be then displayed in different sections of the GUI
     
