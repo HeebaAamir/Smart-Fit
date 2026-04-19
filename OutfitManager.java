@@ -1,7 +1,8 @@
-
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class OutfitManager {
+public class OutfitManager implements Serializable {
+    private static final long serialVersionUID = 1L; 
     private ArrayList<Outfit> outfits;
 
     public OutfitManager() {
