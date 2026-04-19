@@ -1,10 +1,12 @@
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.io.Serializable;
 
 //a calendar for outfits
  
-public class OutfitScheduler {
+public class OutfitScheduler implements Serializable {
+ private static final long serialVersionUID = 1L; 
 
     private HashMap<LocalDate, ArrayList<Outfit>> schedule;
 
