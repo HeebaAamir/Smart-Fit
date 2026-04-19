@@ -1,5 +1,9 @@
+// Importing the serializable interface to implement file handling using serialization that would allow us to reload the saved files.
+import java.io.Serializable
+
 // Making an abstract class ClothingItems that is to serve as the blueprint for other classes.(Abstraction).
-public abstract class ClothingItems {
+public abstract class ClothingItems implements Serializable {
+    private static final long serialVersionUID = 1L; 
     private String size;
     private String brand;
     private int price;
@@ -7,8 +11,9 @@ public abstract class ClothingItems {
     private String season;
     private String colour;
     private int WearCount;
+    private String ImagePath = null;
 
-    public ClothingItems(String size, String brand, int price, String fabric, String colour, int WearCount, String season){
+    public ClothingItems(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath){
         this.size = size;
         this.brand = brand;
         this.price = price;
@@ -16,6 +21,8 @@ public abstract class ClothingItems {
         this.colour = colour;
         this.WearCount = WearCount;
         this.season = season;
+        // Introducing a variable ImagePath to store the paths of images of clothing items input by user.
+        this.ImagePath = ImagePath;
     }
 
     public void setSize(String size){
@@ -63,6 +70,12 @@ public abstract class ClothingItems {
     public String getSeason() { 
         return season; 
     } 
+    public void setImagePath(String ImagePath){
+        this.ImagePath = ImagePath;
+    }
+    public String getImagePath(){
+        return ImagePath;
+    }
     //Abstract method that'll will be overriden in subclasses.(Polymorphism)
     public abstract String getItemType();
 }
@@ -71,11 +84,13 @@ class top extends ClothingItems{
     String style;
     String sleeveType;
 
-    public top(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String style, String sleeveType){
+    public top(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String style, String sleeveType){
         super(size, brand, price, fabric, colour, WearCount, season);
         this.style = style;
         this.sleeveType = sleeveType;
     }
+    // The class top is inheriting the getItemType method from the class ClothingItems and using it accordingly.
+    // Same will be repeated for other classes as well.
     @Override
     public String getItemType() {
     return "Top";
@@ -85,11 +100,10 @@ class top extends ClothingItems{
 class bottom extends ClothingItems{
     String style;
 
-    public bottom(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String style){
+    public bottom(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String style){
         super(size, brand, price, fabric, colour, WearCount,season);
         this.style = style;
     }
-    // The class top is inheriting the getItemType method from the class ClothingItems and using it accordingly.
     @Override
     public String getItemType() {
     return "Bottom";
@@ -101,7 +115,7 @@ class shoes extends ClothingItems{
     int heelSize;
     boolean openFront;
     
-    public shoes(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String style, int heelSize, boolean openFront){
+    public shoes(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String style, int heelSize, boolean openFront){
         super(size, brand, price, fabric, colour, WearCount,season);
         this.style = style;
         this.heelSize = heelSize;
@@ -116,7 +130,7 @@ class shoes extends ClothingItems{
 class accessories extends ClothingItems{
     String type;
 
-    public accessories(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String type){
+    public accessories(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String type){
         super(size, brand, price, fabric, colour, season, WearCount);
         this.type = type;
     }
@@ -129,7 +143,7 @@ class accessories extends ClothingItems{
 class outerwear extends ClothingItems{
     String style;
 
-    public outerwear(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String style){
+    public outerwear(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String style){
         super(size, brand, price, fabric, colour, season, WearCount);
         this.style = style;
         this.style = style;
