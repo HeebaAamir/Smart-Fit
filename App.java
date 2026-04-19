@@ -241,16 +241,17 @@ public class App extends Application {
             String fab   = fabricF.getText().isBlank() ? "Unknown"    : fabricF.getText().trim();
             String sea   = seasonCB.getValue();
             String sty   = styleF.getText().isBlank()  ? "Casual"     : styleF.getText().trim();
+            String imagePath = null;
 
             ClothingItems item = switch (cat) {
-                case "Top"        -> new top(size,brand,price,fab,col,0,sea,sty,sleeveCB.getValue());
-                case "Bottom"     -> new bottom(size,brand,price,fab,col,0,sea,sty);
+                case "Top"        -> new top(size,brand,price,fab,col,0,sea,imagePath,sty,sleeveCB.getValue());
+                case "Bottom"     -> new bottom(size,brand,price,fab,col,0,sea,imagePath,sty);
                 case "Shoes"      -> {
                     int h=0; try{h=Integer.parseInt(heelF.getText().trim());}catch(Exception ig){}
-                    yield new shoes(size,brand,price,fab,col,0,sea,sty,h,openCB.isSelected());
+                    yield new shoes(size,brand,price,fab,col,0,sea,imagePath,sty,h,openCB.isSelected());
                 }
-                case "Outerwear"  -> new outerwear(size,brand,price,fab,col,0,sea,sty);
-                default           -> new accessories(size,brand,price,fab,col,0,sea,sty);
+                case "Outerwear"  -> new outerwear(size,brand,price,fab,col,0,sea,imagePath,sty);
+                default           -> new accessories(size,brand,price,fab,col,0,sea,imagePath,sty);
             };
             if (photoURL[0] != null) imgMap.put(item, photoURL[0]);
             wardrobe.addItems(item);
