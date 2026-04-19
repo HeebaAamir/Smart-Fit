@@ -85,7 +85,7 @@ class top extends ClothingItems{
     String sleeveType;
 
     public top(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String style, String sleeveType){
-        super(size, brand, price, fabric, colour, WearCount, season);
+        super(size, brand, price, fabric, colour, WearCount, season, ImagePath);
         this.style = style;
         this.sleeveType = sleeveType;
     }
@@ -101,7 +101,7 @@ class bottom extends ClothingItems{
     String style;
 
     public bottom(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String style){
-        super(size, brand, price, fabric, colour, WearCount,season);
+        super(size, brand, price, fabric, colour, WearCount,season,ImagePath);
         this.style = style;
     }
     @Override
@@ -116,7 +116,7 @@ class shoes extends ClothingItems{
     boolean openFront;
     
     public shoes(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String style, int heelSize, boolean openFront){
-        super(size, brand, price, fabric, colour, WearCount,season);
+        super(size, brand, price, fabric, colour, WearCount,season,ImagePath);
         this.style = style;
         this.heelSize = heelSize;
         this.openFront = openFront;
@@ -131,7 +131,7 @@ class accessories extends ClothingItems{
     String type;
 
     public accessories(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String type){
-        super(size, brand, price, fabric, colour, season, WearCount);
+        super(size, brand, price, fabric, colour, season, WearCount,ImagePath);
         this.type = type;
     }
     @Override
@@ -144,7 +144,7 @@ class outerwear extends ClothingItems{
     String style;
 
     public outerwear(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String style){
-        super(size, brand, price, fabric, colour, season, WearCount);
+        super(size, brand, price, fabric, colour, season, WearCount,ImagePath);
         this.style = style;
         this.style = style;
     }
