@@ -44,7 +44,7 @@ public class OutfitScheduler implements Serializable {
             for (Outfit o : schedule.get(date)) {
                 System.out.println(" * " + o);
             }
-        
+        }  
     }
  
 public ArrayList<Outfit> getOutfits(LocalDate date) {
