@@ -1,104 +1,60 @@
-//importing libraries for file handling and scanner for taking pngs as input
+//importing libraries for file handling
 import java.io.*;
 import java.nio.file.*;
-import java.util.Scanner;
 
-//main class
 public class PngFiles {
-    public static void main(String[] args) throws Exception{
-        //creating scanner object
-        Scanner input = new Scanner(System.in);
+    
+    //utility method
+    public static String saveImage(String sourcePath, String category){
+        
+    try{ 
+        //creating file object
+        File inputFile = new File(sourcePath);
 
-        //choice menu
-        while(true){
-            System.out.println("\n1. Top");
-            System.out.println("2. Bottom");
-            System.out.println("3. Shoes");
-            System.out.println("4. Accessories");
-            System.out.println("Enter 0 to exit");
-            System.out.print("Enter choice: ");
-
-            //taking input and converting to integer
-            int choice;
-            try{
-            choice = Integer.parseInt(input.nextLine());
-            } 
-            catch (Exception e){
-            System.out.println("Invalid input!");
-            continue;
+        //checking if filw aleady exists or not
+        if(!inputFile.exists()){
+                System.out.println("File not found" +sourcePath);
+                return null;
             }
+        //creating one main folder for all images
+        File mainFolder = new File("images");
+        //if folder doesnt exist then creating new folder
+        if(!mainFolder.exists()) mainFolder.mkdirs();
 
-            //exiting condition and breaking the loop
-            if(choice == 0){
-                System.out.println("Program ended");
-                break;
-            }
+        File targetFolder = new File("images/" + category.toLowerCase());
+        if(!targetFolder.exists()) targetFolder.mkdirs();
 
-            //taking file path as input
-            System.out.println("Enter png path: ");
-            String path = input.nextLine().replace("\"","");
+        //counting existing images to name the new files accordingly
+        File[] files = targetFolder.listFiles();
+        int n=(files == null) ? 0 : files.length;
 
+        //keeping original extension of the file
+        String ext = sourcePath.substring(sourcePath.lastIndexOf('.'));
 
-            //cheking if the input is a png
-            if (!path.toLowerCase().endsWith(".png")) {
-            System.out.println("Only PNG files allowed!");
-            continue;
-}
+        //building destination path where the image will be copied/saved
+        Path destination = Paths.get(
+                targetFolder.getPath() + "/img" + (n + 1) + ext
+            );
 
-            //creating file object
-            File inputFile = new File(path);
-
-            //checking if files exists
-            if(!inputFile.exists()){
-                System.out.println("File not found");
-                continue;
-            }
-
-            //creating one main folder for both tops and bottoms
-            File mainFolder = new File("images");
-            //if folder doesnt exist then making a folder/directory
-            if(!mainFolder.exists()) mainFolder.mkdirs();
-
-            //findind the appropriate folder accoding to the choice
-            File targetFolder;
-
-            if(choice == 1){
-                targetFolder = new File("images/top");
-            } 
-            else if(choice == 2){
-                targetFolder = new File("images/bottom");
-            } 
-             else if (choice == 3) {
-                targetFolder = new File("images/shoes");
-            } 
-            else if (choice == 4) {
-                targetFolder = new File("images/accessories");
-            } 
-            else{
-                System.out.println("Invalid choice");
-                continue;
-            }
-
-            //creating subfolders if doesnt exist
-            if(!targetFolder.exists()) targetFolder.mkdir();
-
-            //counting existing files and then assigning the file name accordingly
-            File[] files = targetFolder.listFiles();
-            int n =(files==null)?0 : files.length;
-
-            //saving png by making a copy of it in the folder
+        //copying file
             Files.copy(
                 inputFile.toPath(),
-                Paths.get(targetFolder.getPath() + "/img" +(n + 1)+ ".png"),
+                destination,
                 StandardCopyOption.REPLACE_EXISTING
-                      );
+            );
+        
+        System.out.println("Image saved successfully");
 
-            System.out.println("Image saved successfully");
+        //returnong saved path of image
+       return destination.toAbsolutePath().toString();
 
-
-
-
-        }
     }
+
+    catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            return null;
+           
+        }
     
-}
+    
+}}
