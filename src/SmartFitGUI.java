@@ -33,6 +33,8 @@ import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.*;
 
+import javax.swing.text.html.ImageView;
+
 public class SmartFitGUI extends Application {
 
     // ── Background image path ─────────────────────────────────────────────
@@ -283,7 +285,28 @@ public class SmartFitGUI extends Application {
                 default          -> new accessories(size,brand,price,fab,col,0,sea,imagePath,sty);
             };
 
-            if (photoURL[0] != null) imgMap.put(item, photoURL[0]);
+            if (photoURL[0] != null){
+            try{
+            //converting javafx path to real file path
+            String sourcePath = new File(
+            new java.net.URI(photoURL[0])
+            ).getAbsolutePath();
+
+            //copying image into images category folder
+            String savedPath = PngFiles.saveImage(sourcePath, cat);
+
+            if(savedPath != null){
+            //storing permanent path
+            imgMap.put(item, new File(savedPath).toURI().toString());
+            }
+
+            } catch (Exception ex) {
+            System.out.println("Image path error: " + ex.getMessage());
+
+            //if copy fails
+            imgMap.put(item, photoURL[0]);
+            }
+        }
             wardrobe.addItems(item);
 
             // Save after every add so data is never lost
