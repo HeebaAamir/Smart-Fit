@@ -2,7 +2,7 @@
 import java.util.ArrayList;
 import java.io.Serializable;
 
-public class Wardrobe {
+public class Wardrobe implements Serializable {
 private static final long serialVersionUID = 1L; 
     
     private ArrayList<ClothingItems>items;
