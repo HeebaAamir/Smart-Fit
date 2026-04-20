@@ -33,7 +33,7 @@ import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.*;
 
-import javax.swing.text.html.ImageView;
+
 
 public class SmartFitGUI extends Application {
 
