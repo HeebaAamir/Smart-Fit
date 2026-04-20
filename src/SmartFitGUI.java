@@ -28,13 +28,10 @@ import javafx.scene.shape.*;
 import javafx.stage.*;
 import javafx.util.Duration;
 import java.io.File;
-import java.lang.classfile.Label;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.*;
-
-import javax.swing.text.html.ImageView;
 
 
 
@@ -262,56 +259,64 @@ public class SmartFitGUI extends Application {
         Button goBtn  = semiBtn("View My Wardrobe →");
         goBtn.setOnAction(e -> { refreshGrid(); fade(this::showWardrobe); });
 
-addBtn.setOnAction(ev -> {
-    int price = 0;
-    try { price = Integer.parseInt(priceF.getText().trim()); }
-    catch (Exception ex) { price = 0; }
+        addBtn.setOnAction(ev -> {
+            int price = 0;
+            try { price = Integer.parseInt(priceF.getText().trim()); }
+            catch (Exception ex) { price = 0; }
 
-    String cat   = stripEmoji(((ToggleButton) catGrp.getSelectedToggle()).getText());
-    String brand = brandF.getText().isBlank()  ? "Unknown"  : brandF.getText().trim();
-    String size  = sizeF.getText().isBlank()   ? "One Size" : sizeF.getText().trim();
-    String col   = colourF.getText().isBlank() ? "White"    : colourF.getText().trim();
-    String fab   = fabricF.getText().isBlank() ? "Unknown"  : fabricF.getText().trim();
-    String sea   = seasonCB.getValue();
-    String sty   = styleF.getText().isBlank()  ? "Casual"   : styleF.getText().trim();
-    String imagePath = null;
+            String cat   = stripEmoji(((ToggleButton) catGrp.getSelectedToggle()).getText());
+            String brand = brandF.getText().isBlank()  ? "Unknown"  : brandF.getText().trim();
+            String size  = sizeF.getText().isBlank()   ? "One Size" : sizeF.getText().trim();
+            String col   = colourF.getText().isBlank() ? "White"    : colourF.getText().trim();
+            String fab   = fabricF.getText().isBlank() ? "Unknown"  : fabricF.getText().trim();
+            String sea   = seasonCB.getValue();
+            String sty   = styleF.getText().isBlank()  ? "Casual"   : styleF.getText().trim();
+            String imagePath = null;
 
-    ClothingItems item = switch (cat) {
-        case "Top"       -> new top(size,brand,price,fab,col,0,sea,imagePath,sty,sleeveCB.getValue());
-        case "Bottom"    -> new bottom(size,brand,price,fab,col,0,sea,imagePath,sty);
-        case "Shoes"     -> {
-            int h = 0;
-            try { h = Integer.parseInt(heelF.getText().trim()); } catch (Exception ig) {}
-            yield new shoes(size,brand,price,fab,col,0,sea,imagePath,sty,h,openCB.isSelected());
+            ClothingItems item = switch (cat) {
+                case "Top"       -> new top(size,brand,price,fab,col,0,sea,imagePath,sty,sleeveCB.getValue());
+                case "Bottom"    -> new bottom(size,brand,price,fab,col,0,sea,imagePath,sty);
+                case "Shoes"     -> {
+                    int h = 0;
+                    try { h = Integer.parseInt(heelF.getText().trim()); } catch (Exception ig) {}
+                    yield new shoes(size,brand,price,fab,col,0,sea,imagePath,sty,h,openCB.isSelected());
+                }
+                case "Outerwear" -> new outerwear(size,brand,price,fab,col,0,sea,imagePath,sty);
+                default          -> new accessories(size,brand,price,fab,col,0,sea,imagePath,sty);
+            };
+
+            if (photoURL[0] != null){
+            try{
+            //converting javafx path to real file path
+            String sourcePath = new File(
+            new java.net.URI(photoURL[0])
+            ).getAbsolutePath();
+
+            //copying image into images category folder
+            String savedPath = PngFiles.saveImage(sourcePath, cat);
+
+            if(savedPath != null){
+            //storing permanent path
+            imgMap.put(item, new File(savedPath).toURI().toString());
+            }
+
+            } catch (Exception ex) {
+            System.out.println("Image path error: " + ex.getMessage());
+
+            //if copy fails
+            imgMap.put(item, photoURL[0]);
+            }
         }
-        case "Outerwear" -> new outerwear(size,brand,price,fab,col,0,sea,imagePath,sty);
-        default          -> new accessories(size,brand,price,fab,col,0,sea,imagePath,sty);
-    };
+            wardrobe.addItems(item);
 
-    // ✅ USE PngFiles TO SAVE IMAGE PERMANENTLY
-    if (photoURL[0] != null) {
-        // Convert URI to file path
-        String filePath = new File(java.net.URI.create(photoURL[0])).getAbsolutePath();
-        // Save to images folder using PngFiles
-        String savedPath = PngFiles.saveImage(filePath, cat.toLowerCase());
-        if (savedPath != null) {
-            imgMap.put(item, savedPath);
-            item.setImagePath(savedPath);  // Also save in the item itself
-        } else {
-            imgMap.put(item, photoURL[0]);  // Fallback to original
-        }
-    }
-    
-    wardrobe.addItems(item);
+            // Save after every add so data is never lost
+            FileManager.saveAll(wardrobe, outfitMgr, scheduler, imgMap);
 
-    // Save after every add so data is never lost
-    FileManager.saveAll(wardrobe, outfitMgr, scheduler, imgMap);
-
-    brandF.clear(); sizeF.clear(); colourF.clear();
-    priceF.clear(); fabricF.clear(); heelF.clear();
-    photoIV.setVisible(false); photoHint.setVisible(true); photoURL[0] = null;
-    msgLbl.setText("✅  " + cat + " added: " + brand + " (" + col + ")");
-});
+            brandF.clear(); sizeF.clear(); colourF.clear();
+            priceF.clear(); fabricF.clear(); heelF.clear();
+            photoIV.setVisible(false); photoHint.setVisible(true); photoURL[0] = null;
+            msgLbl.setText("✅  " + cat + " added: " + brand + " (" + col + ")");
+        });
 
         VBox fieldsCol = new VBox(14, grd, extraBox, msgLbl, addBtn, goBtn);
         fieldsCol.setAlignment(Pos.CENTER_LEFT); fieldsCol.setMaxWidth(430);
@@ -451,75 +456,48 @@ addBtn.setOnAction(ev -> {
     }
 
     private StackPane previewSlot(String label, ClothingItems item, String type,
-                               double slotW, double slotH) {
-    StackPane slot = new StackPane();
-    slot.setPrefSize(slotW, slotH);
-    slot.setMaxSize(slotW, slotH);
-    slot.setMinSize(slotW, slotH);
+                                   double slotW, double slotH) {
+        StackPane slot = new StackPane();
+        slot.setPrefSize(slotW, slotH);
+        slot.setMaxSize(slotW, slotH);
+        slot.setMinSize(slotW, slotH);
 
-    if (item == null) {
-        // Empty placeholder — dashed border + label
-        slot.setStyle("-fx-background-color:rgba(255,255,255,0.07);"
-                + "-fx-border-color:rgba(255,255,255,0.22);"
-                + "-fx-border-style:dashed;-fx-border-width:1.5;");
-        Label ph = new Label(label);
-        ph.setStyle("-fx-font-size:12px;-fx-text-fill:" + TXT_DIM + ";-fx-font-weight:bold;");
-        slot.getChildren().add(ph);
-    } else {
-        // Try to get image from multiple sources
-        String url = imgMap.get(item);
-        if (url == null && item.getImagePath() != null) {
-            url = item.getImagePath();
-            // Check if file exists
-            File imgFile = new File(url);
-            if (imgFile.exists()) {
-                imgMap.put(item, url);  // Cache it
-            } else {
-                url = null;
-            }
-        }
-        
-        if (url != null) {
-            try {
-                // ── Full photo fills the slot ──────────────────────────────
+        if (item == null) {
+            slot.setStyle("-fx-background-color:rgba(255,255,255,0.07);"
+                    + "-fx-border-color:rgba(255,255,255,0.22);"
+                    + "-fx-border-style:dashed;-fx-border-width:1.5;");
+            Label ph = new Label(label);
+            ph.setStyle("-fx-font-size:12px;-fx-text-fill:" + TXT_DIM + ";-fx-font-weight:bold;");
+            slot.getChildren().add(ph);
+        } else {
+            String url = imgMap.get(item);
+            if (url != null) {
                 ImageView iv = new ImageView(new Image(url, true));
-                iv.setFitWidth(slotW);
-                iv.setFitHeight(slotH);
-                iv.setPreserveRatio(true);  // keeps aspect ratio, centres in slot
+                iv.setFitWidth(slotW); iv.setFitHeight(slotH); iv.setPreserveRatio(true);
                 slot.setStyle("-fx-background-color:transparent;");
                 slot.getChildren().add(iv);
-            } catch (Exception e) {
-                // Image failed to load, fall through to color swatch
-                url = null;
+            } else {
+                Rectangle swatch = new Rectangle(slotW, slotH);
+                try { swatch.setFill(Color.web(colHex(item.getColour()))); }
+                catch (Exception ex) { swatch.setFill(Color.LIGHTGRAY); }
+                swatch.setOpacity(0.55);
+                Label emoji = new Label(typeEmoji(type));
+                emoji.setStyle("-fx-font-size:" + (int)(slotH * 0.35) + "px;");
+                VBox info = new VBox(4);
+                info.setAlignment(Pos.BOTTOM_CENTER);
+                Label brandL = new Label(item.getBrand());
+                brandL.setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:" + TXT_CREAM + ";");
+                Label colL = new Label(item.getColour() + "  ·  " + item.getSize());
+                colL.setStyle("-fx-font-size:10px;-fx-text-fill:" + TXT_LIGHT + ";");
+                info.getChildren().addAll(brandL, colL);
+                info.setPadding(new Insets(0, 0, 8, 0));
+                slot.setStyle("-fx-background-color:rgba(0,0,0,0.12);");
+                slot.getChildren().addAll(swatch, emoji, info);
+                StackPane.setAlignment(info, Pos.BOTTOM_CENTER);
             }
         }
-        
-        if (url == null) {
-            // ── No photo or failed to load: large colour swatch + emoji ─────
-            Rectangle swatch = new Rectangle(slotW, slotH);
-            try { swatch.setFill(Color.web(colHex(item.getColour()))); }
-            catch (Exception ex) { swatch.setFill(Color.LIGHTGRAY); }
-            swatch.setOpacity(0.55);
-
-            Label emoji = new Label(typeEmoji(type));
-            emoji.setStyle("-fx-font-size:" + (int)(slotH * 0.35) + "px;");
-
-            VBox info = new VBox(4);
-            info.setAlignment(Pos.BOTTOM_CENTER);
-            Label brandL = new Label(item.getBrand());
-            brandL.setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:" + TXT_CREAM + ";");
-            Label colL = new Label(item.getColour() + "  ·  " + item.getSize());
-            colL.setStyle("-fx-font-size:10px;-fx-text-fill:" + TXT_LIGHT + ";");
-            info.getChildren().addAll(brandL, colL);
-            info.setPadding(new Insets(0, 0, 8, 0));
-
-            slot.setStyle("-fx-background-color:rgba(0,0,0,0.12);");
-            slot.getChildren().addAll(swatch, emoji, info);
-            StackPane.setAlignment(info, Pos.BOTTOM_CENTER);
-        }
+        return slot;
     }
-    return slot;
-}
 
     // ═════════════════════════════════════════════════════════════════════
     // SCREEN 4 — OUTERWEAR & ACCESSORIES
@@ -627,62 +605,45 @@ addBtn.setOnAction(ev -> {
     // ── Flat-lay slot ─────────────────────────────────────────────────────
     private StackPane flatSlot(ClothingItems item, String type,
                                 String label, double w, double h) {
-    StackPane slot = new StackPane();
-    slot.setPrefSize(w, h); slot.setMaxSize(w, h); slot.setMinSize(w, h);
+        StackPane slot = new StackPane();
+        slot.setPrefSize(w, h); slot.setMaxSize(w, h); slot.setMinSize(w, h);
 
-    if (item == null) {
-        slot.setStyle("-fx-background-color:rgba(255,255,255,0.06);"
-                + "-fx-border-color:rgba(255,255,255,0.18);"
-                + "-fx-border-style:dashed;-fx-border-width:1.2;"
-                + "-fx-background-radius:10;-fx-border-radius:10;");
-        Label ph = new Label(label);
-        ph.setStyle("-fx-font-size:10px;-fx-text-fill:" + TXT_DIM + ";-fx-font-weight:bold;");
-        ph.setWrapText(true);
-        ph.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-        ph.setMaxWidth(w - 10);
-        slot.getChildren().add(ph);
-    } else {
-        // Try to get image from multiple sources
-        String url = imgMap.get(item);
-        if (url == null && item.getImagePath() != null) {
-            url = item.getImagePath();
-            File imgFile = new File(url);
-            if (imgFile.exists()) {
-                imgMap.put(item, url);
-            } else {
-                url = null;
-            }
-        }
-        
-        if (url != null) {
-            try {
+        if (item == null) {
+            slot.setStyle("-fx-background-color:rgba(255,255,255,0.06);"
+                    + "-fx-border-color:rgba(255,255,255,0.18);"
+                    + "-fx-border-style:dashed;-fx-border-width:1.2;"
+                    + "-fx-background-radius:10;-fx-border-radius:10;");
+            Label ph = new Label(label);
+            ph.setStyle("-fx-font-size:10px;-fx-text-fill:" + TXT_DIM + ";-fx-font-weight:bold;");
+            ph.setWrapText(true);
+            ph.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+            ph.setMaxWidth(w - 10);
+            slot.getChildren().add(ph);
+        } else {
+            String url = imgMap.get(item);
+            if (url != null) {
                 ImageView iv = new ImageView(new Image(url, true));
                 iv.setFitWidth(w); iv.setFitHeight(h); iv.setPreserveRatio(true);
                 slot.setStyle("-fx-background-color:transparent;");
                 slot.getChildren().add(iv);
-            } catch (Exception e) {
-                url = null;
+            } else {
+                Rectangle swatch = new Rectangle(w, h);
+                swatch.setArcWidth(10); swatch.setArcHeight(10);
+                try { swatch.setFill(Color.web(colHex(item.getColour()))); }
+                catch (Exception ex) { swatch.setFill(Color.LIGHTGRAY); }
+                swatch.setOpacity(0.50);
+                Label emojiL = new Label(typeEmoji(type));
+                emojiL.setStyle("-fx-font-size:" + (int)(h * 0.30) + "px;");
+                Label brandL = new Label(item.getBrand());
+                brandL.setStyle("-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:" + TXT_CREAM + ";");
+                VBox info = new VBox(2, emojiL, brandL);
+                info.setAlignment(Pos.CENTER);
+                slot.setStyle("-fx-background-radius:10;-fx-background-color:rgba(0,0,0,0.10);");
+                slot.getChildren().addAll(swatch, info);
             }
         }
-        
-        if (url == null) {
-            Rectangle swatch = new Rectangle(w, h);
-            swatch.setArcWidth(10); swatch.setArcHeight(10);
-            try { swatch.setFill(Color.web(colHex(item.getColour()))); }
-            catch (Exception ex) { swatch.setFill(Color.LIGHTGRAY); }
-            swatch.setOpacity(0.50);
-            Label emojiL = new Label(typeEmoji(type));
-            emojiL.setStyle("-fx-font-size:" + (int)(h * 0.30) + "px;");
-            Label brandL = new Label(item.getBrand());
-            brandL.setStyle("-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:" + TXT_CREAM + ";");
-            VBox info = new VBox(2, emojiL, brandL);
-            info.setAlignment(Pos.CENTER);
-            slot.setStyle("-fx-background-radius:10;-fx-background-color:rgba(0,0,0,0.10);");
-            slot.getChildren().addAll(swatch, info);
-        }
+        return slot;
     }
-    return slot;
-}
 
     // ═════════════════════════════════════════════════════════════════════
     // SCREEN 5 — TRY COMBINATIONS (kept for reference)
@@ -1036,38 +997,22 @@ addBtn.setOnAction(ev -> {
     // ITEM CARD
     // ═════════════════════════════════════════════════════════════════════
     private VBox itemCard(ClothingItems item, String type) {
-    Rectangle swatch = new Rectangle(110, 110);
-    swatch.setArcWidth(12); swatch.setArcHeight(12);
-    try { swatch.setFill(Color.web(colHex(item.getColour()))); }
-    catch (Exception ex) { swatch.setFill(Color.LIGHTGRAY); }
+        Rectangle swatch = new Rectangle(110, 110);
+        swatch.setArcWidth(12); swatch.setArcHeight(12);
+        try { swatch.setFill(Color.web(colHex(item.getColour()))); }
+        catch (Exception ex) { swatch.setFill(Color.LIGHTGRAY); }
 
-    Label emojiLbl = new Label(typeEmoji(type));
-    emojiLbl.setStyle("-fx-font-size:28px;");
-    StackPane imgBox = new StackPane(swatch, emojiLbl);
-    imgBox.setPrefSize(130, 130);
+        Label emojiLbl = new Label(typeEmoji(type));
+        emojiLbl.setStyle("-fx-font-size:28px;");
+        StackPane imgBox = new StackPane(swatch, emojiLbl);
+        imgBox.setPrefSize(130, 130);
 
-    // ✅ Try to get image from multiple sources
-    String url = imgMap.get(item);
-    if (url == null && item.getImagePath() != null) {
-        url = item.getImagePath();
-        // Check if file exists
-        File imgFile = new File(url);
-        if (!imgFile.exists()) {
-            url = null;
-        } else {
-            imgMap.put(item, url);  // Cache it
-        }
-    }
-    
-    if (url != null) {
-        try {
+        String url = imgMap.get(item);
+        if (url != null) {
             ImageView iv = new ImageView(new Image(url, true));
             iv.setFitWidth(130); iv.setFitHeight(130); iv.setPreserveRatio(true);
             imgBox.getChildren().setAll(iv);
-        } catch (Exception e) {
-            // Image failed to load, keep default
         }
-    }
 
         Label brandLbl = new Label(item.getBrand());
         brandLbl.setStyle("-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:white;");
