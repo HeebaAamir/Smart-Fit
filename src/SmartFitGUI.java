@@ -87,8 +87,9 @@ public class SmartFitGUI extends Application {
     private outerwear   selOuter = null;
     private accessories selAcc   = null;
 
-    // Photo map: clothing item → image URL string
-    private final Map<ClothingItems, String> imgMap = new HashMap<>();
+    // NOTE: imgMap removed — image path is now stored directly on each
+    // ClothingItems object via item.getImagePath() / item.setImagePath()
+    // This means it persists automatically with serialization.
 
     // Upload URLs for online search screen
     private String searchUrl = null;
@@ -115,9 +116,6 @@ public class SmartFitGUI extends Application {
         outfitMgr = _outfitMgr;
         scheduler = _scheduler;
 
-        // Load saved image map
-        imgMap.putAll(FileManager.loadImgMap());
-
         root = new StackPane();
         showHome();
 
@@ -128,7 +126,7 @@ public class SmartFitGUI extends Application {
 
         // Save everything when the window is closed
         stage.setOnCloseRequest(e ->
-            FileManager.saveAll(wardrobe, outfitMgr, scheduler, imgMap)
+            FileManager.saveAll(wardrobe, outfitMgr, scheduler)
         );
 
         stage.show();
@@ -287,30 +285,31 @@ public class SmartFitGUI extends Application {
 
             if (photoURL[0] != null){
             try{
-            //converting javafx path to real file path
+            // Convert JavaFX URL to real file path
             String sourcePath = new File(
             new java.net.URI(photoURL[0])
             ).getAbsolutePath();
 
-            //copying image into images category folder
+            // Copy image into images/category/ folder permanently
             String savedPath = PngFiles.saveImage(sourcePath, cat);
 
             if(savedPath != null){
-            //storing permanent path
-            imgMap.put(item, new File(savedPath).toURI().toString());
+                // Store path DIRECTLY on the item — persists with serialization
+                item.setImagePath(new File(savedPath).toURI().toString());
+            } else {
+                // Copy failed — store original path as fallback
+                item.setImagePath(photoURL[0]);
             }
 
             } catch (Exception ex) {
             System.out.println("Image path error: " + ex.getMessage());
-
-            //if copy fails
-            imgMap.put(item, photoURL[0]);
+            item.setImagePath(photoURL[0]);
             }
         }
             wardrobe.addItems(item);
 
             // Save after every add so data is never lost
-            FileManager.saveAll(wardrobe, outfitMgr, scheduler, imgMap);
+            FileManager.saveAll(wardrobe, outfitMgr, scheduler);
 
             brandF.clear(); sizeF.clear(); colourF.clear();
             priceF.clear(); fabricF.clear(); heelF.clear();
@@ -386,7 +385,7 @@ public class SmartFitGUI extends Application {
             refreshGrid();
             refreshPreview();
             // Save after outfit is saved
-            FileManager.saveAll(wardrobe, outfitMgr, scheduler, imgMap);
+            FileManager.saveAll(wardrobe, outfitMgr, scheduler);
             alert("✅  Outfit '" + name + "' saved!");
         });
 
@@ -470,7 +469,7 @@ public class SmartFitGUI extends Application {
             ph.setStyle("-fx-font-size:12px;-fx-text-fill:" + TXT_DIM + ";-fx-font-weight:bold;");
             slot.getChildren().add(ph);
         } else {
-            String url = imgMap.get(item);
+            String url = item.getImagePath();
             if (url != null) {
                 ImageView iv = new ImageView(new Image(url, true));
                 iv.setFitWidth(slotW); iv.setFitHeight(slotH); iv.setPreserveRatio(true);
@@ -572,7 +571,7 @@ public class SmartFitGUI extends Application {
             ArrayList<Outfit> all = outfitMgr.getAllOutfits();
             if (all.isEmpty()) { alert("Save your outfit first in My Wardrobe."); return; }
             all.get(all.size()-1).setRating(ratingVal[0]);
-            FileManager.saveAll(wardrobe, outfitMgr, scheduler, imgMap);
+            FileManager.saveAll(wardrobe, outfitMgr, scheduler);
             alert("✅  Rating saved!");
         });
 
@@ -620,7 +619,7 @@ public class SmartFitGUI extends Application {
             ph.setMaxWidth(w - 10);
             slot.getChildren().add(ph);
         } else {
-            String url = imgMap.get(item);
+            String url = item.getImagePath();
             if (url != null) {
                 ImageView iv = new ImageView(new Image(url, true));
                 iv.setFitWidth(w); iv.setFitHeight(h); iv.setPreserveRatio(true);
@@ -857,7 +856,7 @@ public class SmartFitGUI extends Application {
             if (sel == null) return;
             scheduler.addOutfit(date, sel);
             refreshExistingList(existingList, date);
-            FileManager.saveAll(wardrobe, outfitMgr, scheduler, imgMap);
+            FileManager.saveAll(wardrobe, outfitMgr, scheduler);
         });
 
         Button closeBtn = pill("Close", 120, 40);
@@ -1007,7 +1006,7 @@ public class SmartFitGUI extends Application {
         StackPane imgBox = new StackPane(swatch, emojiLbl);
         imgBox.setPrefSize(130, 130);
 
-        String url = imgMap.get(item);
+        String url = item.getImagePath();
         if (url != null) {
             ImageView iv = new ImageView(new Image(url, true));
             iv.setFitWidth(130); iv.setFitHeight(130); iv.setPreserveRatio(true);

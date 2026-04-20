@@ -26,15 +26,20 @@ public class FileManager {
         saveObject(new java.util.HashMap<>(map), IMGMAP_FILE);
     }
 
-    
-    public static void saveAll(Wardrobe w, OutfitManager om,
-                               OutfitScheduler os,
-                               java.util.Map<ClothingItems, String> imgMap) {
+    // Save all 3 model objects — imgMap no longer needed since
+    // image paths are stored directly on each ClothingItems object
+    public static void saveAll(Wardrobe w, OutfitManager om, OutfitScheduler os) {
         saveWardrobe(w);
         saveOutfits(om);
         saveSchedule(os);
-        saveImgMap(imgMap);
         System.out.println("All data saved successfully.");
+    }
+
+    // Kept for backward compatibility if called anywhere with 4 args
+    public static void saveAll(Wardrobe w, OutfitManager om,
+                               OutfitScheduler os,
+                               java.util.Map<ClothingItems, String> imgMap) {
+        saveAll(w, om, os); // just ignore imgMap
     }
 
     
