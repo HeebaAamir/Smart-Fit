@@ -57,4 +57,8 @@ public class Outfit implements Serializable {
     public int getRating() { 
         return rating; 
     }
+   @Override
+    public String toString() {
+        return name;  // This will show outfit name instead of Outfit@xxxxxx
+    }
 }
