@@ -389,7 +389,13 @@ public class SmartFitGUI extends Application {
             alert("✅  Outfit '" + name + "' saved!");
         });
 
-        HBox topBar = new HBox(12, nameF, starPicker, saveBtn, outerAccBtn, addMoreBtn);
+        Button aiPopupBtn = new Button("✨ AI Stylist");
+        aiPopupBtn.setStyle("-fx-background-color:" + BTN_LIME + ";-fx-text-fill:" + BTN_LIME_TXT + ";"
+        + "-fx-font-size:13px;-fx-font-weight:bold;"
+        + "-fx-background-radius:26;-fx-padding:8 20;-fx-cursor:hand;");
+        aiPopupBtn.setOnAction(e -> showAIPopup());
+
+        HBox topBar = new HBox(12, nameF, starPicker, saveBtn, outerAccBtn, addMoreBtn, aiPopupBtn);
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setPadding(new Insets(0,0,6,0));
 
@@ -532,16 +538,6 @@ public class SmartFitGUI extends Application {
         VBox outerGrid = gridRow("OUTERWEAR",   rowOuter);
         VBox accGrid   = gridRow("ACCESSORIES", rowAcc);
 
-        // Suggestions
-        Label sugTitle = new Label("SUGGESTIONS:");
-        sugTitle.setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:" + TXT_CREAM + ";");
-        Label sugBody = new Label(buildSuggestion());
-        sugBody.setStyle("-fx-font-size:11px;-fx-text-fill:" + TXT_LIGHT + ";");
-        sugBody.setWrapText(true);
-        VBox sugCard = new VBox(8, sugTitle, sugBody);
-        sugCard.setPadding(new Insets(12));
-        sugCard.setStyle("-fx-background-color:" + CARD_BG + ";-fx-background-radius:12;");
-
         // Rating
         final int[] ratingVal = {0};
         Label ratingTitle = new Label("RATING:");
@@ -581,7 +577,9 @@ public class SmartFitGUI extends Application {
         HBox actionRow = new HBox(12, saveOutfitBtn, doneBtn);
         actionRow.setAlignment(Pos.CENTER_LEFT);
 
-        VBox rightCol = new VBox(12, outerGrid, accGrid, sugCard, ratingCard, actionRow);
+        VBox aiCollapsibleSection = createCollapsibleAISection();
+
+        VBox rightCol = new VBox(12, outerGrid, accGrid, ratingCard, actionRow, aiCollapsibleSection);
         rightCol.setMaxWidth(480);
         HBox.setHgrow(rightCol, Priority.ALWAYS);
 
@@ -932,6 +930,42 @@ public class SmartFitGUI extends Application {
     // SCREEN 7 — ONLINE SEARCH
     // (SerpApi integration plugs in here — replace startBtn action)
     // ═════════════════════════════════════════════════════════════════════
+    /*private void showOnlineSearch() {
+        StackPane bg = grad();
+        Label title = screenTitle("Online Search");
+
+        ImageView prev = new ImageView();
+        prev.setFitWidth(480); prev.setFitHeight(260);
+        prev.setPreserveRatio(true); prev.setVisible(false);
+
+        Label hint = new Label("CHOOSE FROM FOLDER OR DRAG IT HERE");
+        hint.setStyle("-fx-font-size:14px;-fx-font-family:'Courier New';"
+                + "-fx-text-fill:" + TXT_LIGHT + ";-fx-letter-spacing:1.5;");
+
+        StackPane zone = dropCard(hint, prev, 580, 300);
+        zone.setOnMouseClicked(e -> {
+            File f = pickImg(); if (f == null) return;
+            searchUrl = f.toURI().toString();
+            showInDrop(prev, hint, searchUrl);
+        });
+        dnd(zone, prev, hint, u -> searchUrl = u);
+
+        Button startBtn = pill("START SEARCHING", 260, 52);
+        // ── TODO: replace this action with SerpApi call (Step 6 of API guide)
+        startBtn.setOnAction(e -> {
+            if (searchUrl != null) fade(this::showOuterAcc);
+            else shake(zone);
+        });
+
+        Button backBtn = backBtn(); backBtn.setOnAction(e -> fade(this::showHome));
+        VBox content = new VBox(24, title, zone, startBtn);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new Insets(24, 40, 30, 40));
+        StackPane.setAlignment(backBtn, Pos.TOP_LEFT);
+        StackPane.setMargin(backBtn, new Insets(12,0,0,12));
+        bg.getChildren().addAll(scrollWrap(content), backBtn);
+        show(bg);
+    }*/
 
     private void showOnlineSearch() {
     StackPane bg = grad();
@@ -1118,6 +1152,205 @@ private void displaySearchResults(VBox resultsArea, SerpResult result) {
         resultsArea.getChildren().add(itemBox);
         count++;
     }
+}
+
+    // ==============================================================
+// AI POPUP METHOD (for Wardrobe panel)
+// ==============================================================
+private void showAIPopup() {
+    if (selTop == null || selBot == null || selShoe == null) {
+        alert("Please select at least a Top, Bottom, and Shoes first!");
+        return;
+    }
+    
+    Stage popup = new Stage();
+    popup.initModality(Modality.APPLICATION_MODAL);
+    popup.setTitle("✨ AI Fashion Stylist");
+    
+    VBox popupContent = new VBox(15);
+    popupContent.setAlignment(Pos.CENTER);
+    popupContent.setPadding(new Insets(25));
+    popupContent.setStyle("-fx-background-color: #C084FC; -fx-background-radius: 15;");
+    popupContent.setPrefWidth(450);
+    popupContent.setPrefHeight(380);
+    
+    Label title = new Label("✨ AI Stylist Advice ✨");
+    title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: " + TXT_CREAM + ";");
+    
+    Label selectedLabel = new Label(getSelectedItemsSummary());
+    selectedLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + TXT_LIGHT + ";");
+    selectedLabel.setWrapText(true);
+    
+    Label loadingLabel = new Label("🤔 Click 'Get Advice' to see AI suggestions...");
+    loadingLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #FFD700;");
+    loadingLabel.setWrapText(true);
+    
+    TextArea resultArea = new TextArea();
+    resultArea.setEditable(false);
+    resultArea.setWrapText(true);
+    resultArea.setPrefHeight(160);
+    resultArea.setStyle("-fx-background-color: #A855F7;"
+            + "-fx-text-fill: " + TXT_CREAM + ";"
+            + "-fx-font-size: 12px;"
+            + "-fx-border-color: rgba(255,255,255,0.3);"
+            + "-fx-border-radius: 8;"
+            + "-fx-background-radius: 8;");
+    
+    Button getAdviceBtn = new Button("✨ Get AI Advice");
+    getAdviceBtn.setStyle("-fx-background-color:" + BTN_LIME + ";-fx-text-fill:" + BTN_LIME_TXT + ";"
+            + "-fx-font-size:13px;-fx-font-weight:bold;"
+            + "-fx-background-radius:20;-fx-padding:10 25;-fx-cursor:hand;");
+    
+    Button closeBtn = new Button("Close");
+    closeBtn.setStyle("-fx-background-color: rgba(255,255,255,0.2);-fx-text-fill: white;"
+            + "-fx-background-radius:20;-fx-padding:8 20;-fx-cursor:hand;");
+    closeBtn.setOnAction(ev -> popup.close());
+    
+    HBox buttonRow = new HBox(15, getAdviceBtn, closeBtn);
+    buttonRow.setAlignment(Pos.CENTER);
+    
+    popupContent.getChildren().addAll(title, selectedLabel, loadingLabel, resultArea, buttonRow);
+    
+    getAdviceBtn.setOnAction(ev -> {
+        loadingLabel.setText("🤔 AI is thinking about your outfit...");
+        loadingLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #FFD700;");
+        resultArea.clear();
+        getAdviceBtn.setDisable(true);
+        
+        String topColor = selTop != null ? selTop.getColour() : "Not selected";
+        String bottomColor = selBot != null ? selBot.getColour() : "Not selected";
+        String shoeColor = selShoe != null ? selShoe.getColour() : "Not selected";
+        String outerColor = selOuter != null ? selOuter.getColour() : null;
+        String accColor = selAcc != null ? selAcc.getColour() : null;
+        
+        new Thread(() -> {
+            String advice = GroqClient.getSuggestion(
+                topColor, bottomColor, shoeColor, outerColor, accColor, "current"
+            );
+            
+            javafx.application.Platform.runLater(() -> {
+                loadingLabel.setText("✅ Here's your personalized advice:");
+                loadingLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + BTN_LIME + ";");
+                resultArea.setText(advice);
+                getAdviceBtn.setDisable(false);
+            });
+        }).start();
+    });
+    
+    Scene popupScene = new Scene(popupContent);
+    popup.setScene(popupScene);
+    popup.show();
+}
+
+// ==============================================================
+// COLLAPSIBLE AI SECTION (for Outerwear panel)
+// ==============================================================
+    private VBox createCollapsibleAISection() {
+    // Main container - Purple background matching C_MID (#C084FC)
+    VBox container = new VBox(0);
+    container.setStyle("-fx-background-color: #C084FC;-fx-background-radius:12;");
+    container.setPadding(new Insets(0));
+    
+    // Header (always visible - click to expand/collapse)
+    HBox header = new HBox(8);
+    header.setAlignment(Pos.CENTER_LEFT);
+    header.setPadding(new Insets(12));
+    header.setStyle("-fx-cursor:hand;");
+    
+    // Arrow Label
+    Label arrowLabel = new Label("▶");
+    arrowLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: " + BTN_LIME + ";");
+    
+    Label headerText = new Label(" AI Stylist Suggestions");
+    headerText.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: " + TXT_CREAM + ";");
+    
+    header.getChildren().addAll(arrowLabel, headerText);
+    
+    // Content (hidden initially)
+    VBox content = new VBox(10);
+    content.setPadding(new Insets(0, 12, 12, 12));
+    content.setVisible(false);
+    content.setManaged(false);
+    
+    // Loading indicator
+    Label loadingLabel = new Label("🤔 Click 'Get Advice' to see AI suggestions...");
+    loadingLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: " + TXT_LIGHT + ";");
+    loadingLabel.setWrapText(true);
+    
+    // Result area - Darker purple for contrast
+    TextArea adviceArea = new TextArea();
+    adviceArea.setEditable(false);
+    adviceArea.setWrapText(true);
+    adviceArea.setPrefHeight(120);
+    adviceArea.setStyle("-fx-background-color: #A855F7;"
+            + "-fx-text-fill: " + TXT_CREAM + ";"
+            + "-fx-font-size: 11px;"
+            + "-fx-border-color: rgba(255,255,255,0.2);"
+            + "-fx-border-radius: 8;"
+            + "-fx-background-radius: 8;");
+    
+    // Get Advice button
+    Button getAdviceBtn = new Button("✨ Get AI Advice");
+    getAdviceBtn.setStyle("-fx-background-color:" + BTN_LIME + ";-fx-text-fill:" + BTN_LIME_TXT + ";"
+            + "-fx-font-size:12px;-fx-font-weight:bold;"
+            + "-fx-background-radius:20;-fx-padding:8 16;-fx-cursor:hand;");
+    
+    // Status label
+    Label statusLabel = new Label();
+    statusLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #FFD700;");
+    statusLabel.setWrapText(true);
+    
+    content.getChildren().addAll(loadingLabel, adviceArea, getAdviceBtn, statusLabel);
+    
+    // Toggle expand/collapse when header is clicked
+    header.setOnMouseClicked(e -> {
+        boolean isExpanded = content.isVisible();
+        content.setVisible(!isExpanded);
+        content.setManaged(!isExpanded);
+        arrowLabel.setText(isExpanded ? "▶" : "▼");
+    });
+    
+    // Get Advice button action
+    getAdviceBtn.setOnAction(e -> {
+        if (selTop == null || selBot == null || selShoe == null) {
+            statusLabel.setText("❌ Please select at least Top, Bottom, and Shoes first!");
+            return;
+        }
+        
+        loadingLabel.setText("🤔 AI is thinking about your outfit...");
+        loadingLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #FFD700;");
+        adviceArea.clear();
+        statusLabel.setText("");
+        getAdviceBtn.setDisable(true);
+        
+        String topColor = selTop != null ? selTop.getColour() : "Not selected";
+        String bottomColor = selBot != null ? selBot.getColour() : "Not selected";
+        String shoeColor = selShoe != null ? selShoe.getColour() : "Not selected";
+        String outerColor = selOuter != null ? selOuter.getColour() : null;
+        String accColor = selAcc != null ? selAcc.getColour() : null;
+        
+        new Thread(() -> {
+            String advice = GroqClient.getSuggestion(
+                topColor, bottomColor, shoeColor, outerColor, accColor, "current"
+            );
+            
+            javafx.application.Platform.runLater(() -> {
+                loadingLabel.setText("✅ Here's your personalized advice:");
+                loadingLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: " + BTN_LIME + ";");
+                adviceArea.setText(advice);
+                getAdviceBtn.setDisable(false);
+                
+                if (!content.isVisible()) {
+                    content.setVisible(true);
+                    content.setManaged(true);
+                    arrowLabel.setText("▼");
+                }
+            });
+        }).start();
+    });
+    
+    container.getChildren().addAll(header, content);
+    return container;
 }
 
 
@@ -1547,6 +1780,18 @@ private void displaySearchResults(VBox resultsArea, SerpResult result) {
             tips.add("• Select items in My Wardrobe for personalised suggestions");
         return String.join("\n", tips);
     }
+
+// ✅ ADD THIS NEW METHOD HERE
+private String getSelectedItemsSummary() {
+    StringBuilder sb = new StringBuilder("📋 Your selected items:\n");
+    if (selTop != null) sb.append("  👕 Top: ").append(selTop.getColour()).append(" ").append(selTop.getBrand()).append("\n");
+    if (selBot != null) sb.append("  👖 Bottom: ").append(selBot.getColour()).append(" ").append(selBot.getBrand()).append("\n");
+    if (selShoe != null) sb.append("  👟 Shoes: ").append(selShoe.getColour()).append(" ").append(selShoe.getBrand()).append("\n");
+    if (selOuter != null) sb.append("  🧥 Outerwear: ").append(selOuter.getColour()).append(" ").append(selOuter.getBrand()).append("\n");
+    if (selAcc != null) sb.append("  👜 Accessory: ").append(selAcc.getColour()).append(" ").append(selAcc.getBrand()).append("\n");
+    if (selOuter == null && selAcc == null) sb.append("  (Add outerwear/accessories in the next screen)\n");
+    return sb.toString();
+}
 
     private String ratingWord(int s) {
         return switch(s) {
