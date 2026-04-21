@@ -932,42 +932,194 @@ public class SmartFitGUI extends Application {
     // SCREEN 7 — ONLINE SEARCH
     // (SerpApi integration plugs in here — replace startBtn action)
     // ═════════════════════════════════════════════════════════════════════
+
     private void showOnlineSearch() {
-        StackPane bg = grad();
-        Label title = screenTitle("Online Search");
+    StackPane bg = grad();
+    Label title = screenTitle("Online Search");
 
-        ImageView prev = new ImageView();
-        prev.setFitWidth(480); prev.setFitHeight(260);
-        prev.setPreserveRatio(true); prev.setVisible(false);
+    ImageView prev = new ImageView();
+    prev.setFitWidth(480); prev.setFitHeight(260);
+    prev.setPreserveRatio(true); prev.setVisible(false);
 
-        Label hint = new Label("CHOOSE FROM FOLDER OR DRAG IT HERE");
-        hint.setStyle("-fx-font-size:14px;-fx-font-family:'Courier New';"
-                + "-fx-text-fill:" + TXT_LIGHT + ";-fx-letter-spacing:1.5;");
+    Label hint = new Label("CHOOSE FROM FOLDER OR DRAG IT HERE");
+    hint.setStyle("-fx-font-size:14px;-fx-font-family:'Courier New';"
+            + "-fx-text-fill:" + TXT_LIGHT + ";-fx-letter-spacing:1.5;");
 
-        StackPane zone = dropCard(hint, prev, 580, 300);
-        zone.setOnMouseClicked(e -> {
-            File f = pickImg(); if (f == null) return;
-            searchUrl = f.toURI().toString();
-            showInDrop(prev, hint, searchUrl);
+    StackPane zone = dropCard(hint, prev, 580, 300);
+    zone.setOnMouseClicked(e -> {
+        File f = pickImg(); if (f == null) return;
+        searchUrl = f.toURI().toString();
+        showInDrop(prev, hint, searchUrl);
+    });
+    dnd(zone, prev, hint, u -> searchUrl = u);
+
+    // ── BUDGET INPUT SECTION ─────────────────────────────────────────────
+    Label budgetLabel = new Label("💰 Maximum Budget (PKR):");
+    budgetLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: " + TXT_CREAM + ";");
+    
+    TextField budgetField = new TextField();
+    budgetField.setPromptText("e.g., 5000 (leave empty for any)");
+    budgetField.setPrefWidth(250);
+    budgetField.setStyle("-fx-background-color: rgba(255,255,255,0.18);"
+            + "-fx-text-fill: white;-fx-prompt-text-fill: rgba(255,255,255,0.45);"
+            + "-fx-border-color: rgba(255,255,255,0.30);-fx-border-radius: 8;"
+            + "-fx-background-radius: 8;-fx-font-size: 14px;-fx-padding: 8 12;");
+    
+    // Quick budget buttons
+    HBox quickBudget = new HBox(10);
+    quickBudget.setAlignment(Pos.CENTER);
+    String[] budgets = {"2000", "5000", "10000", "Any"};
+    for (String b : budgets) {
+        Button btn = new Button(b.equals("Any") ? "Any" : "Under " + b);
+        btn.setStyle("-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white;"
+                + "-fx-background-radius: 15; -fx-padding: 5 12; -fx-font-size: 11px;");
+        btn.setOnAction(ev -> {
+            if (b.equals("Any")) {
+                budgetField.clear();  // Clear the field, don't set "Any"
+            } else {
+                budgetField.setText(b);
+            }
         });
-        dnd(zone, prev, hint, u -> searchUrl = u);
-
-        Button startBtn = pill("START SEARCHING", 260, 52);
-        // ── TODO: replace this action with SerpApi call (Step 6 of API guide)
-        startBtn.setOnAction(e -> {
-            if (searchUrl != null) fade(this::showOuterAcc);
-            else shake(zone);
-        });
-
-        Button backBtn = backBtn(); backBtn.setOnAction(e -> fade(this::showHome));
-        VBox content = new VBox(24, title, zone, startBtn);
-        content.setAlignment(Pos.CENTER);
-        content.setPadding(new Insets(24, 40, 30, 40));
-        StackPane.setAlignment(backBtn, Pos.TOP_LEFT);
-        StackPane.setMargin(backBtn, new Insets(12,0,0,12));
-        bg.getChildren().addAll(scrollWrap(content), backBtn);
-        show(bg);
+        quickBudget.getChildren().add(btn);
     }
+    
+    VBox budgetBox = new VBox(8, budgetLabel, budgetField, quickBudget);
+    budgetBox.setAlignment(Pos.CENTER);
+    
+    // ── STATUS LABEL ─────────────────────────────────────────────────────
+    Label statusLabel = new Label();
+    statusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #FFD700;");
+    statusLabel.setWrapText(true);
+    statusLabel.setMaxWidth(500);
+    statusLabel.setVisible(false);
+    
+    // ── RESULTS AREA ─────────────────────────────────────────────────────
+    VBox resultsArea = new VBox(8);
+    resultsArea.setStyle("-fx-background-color: " + CARD_BG + ";-fx-background-radius: 10;"
+            + "-fx-padding: 10;");
+    resultsArea.setVisible(false);
+    ScrollPane resultsScroll = new ScrollPane(resultsArea);
+    resultsScroll.setFitToWidth(true);
+    resultsScroll.setPrefHeight(250);
+    resultsScroll.setStyle("-fx-background-color: transparent;");
+
+    Button startBtn = pill("START SEARCHING", 260, 52);
+    
+    // ── SEARCH BUTTON ACTION ────────────────────────────────────────────
+    startBtn.setOnAction(e -> {
+        if (searchUrl != null) {
+            String budgetText = budgetField.getText().trim();
+            double maxBudget;
+            
+            // Handle "Any" or empty input
+            if (budgetText.isEmpty() || budgetText.equalsIgnoreCase("Any")) {
+                maxBudget = Double.MAX_VALUE;  // No budget limit
+            } else {
+                try {
+                    maxBudget = Double.parseDouble(budgetText);
+                    if (maxBudget < 0) {
+                        statusLabel.setText("❌ Budget cannot be negative!");
+                        statusLabel.setVisible(true);
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    statusLabel.setText("❌ Invalid budget. Please enter a number (e.g., 5000) or leave empty.");
+                    statusLabel.setVisible(true);
+                    return;
+                }
+            }
+            
+            // Show status
+            statusLabel.setText("🔍 Searching for similar items under Rs " + 
+                    (maxBudget == Double.MAX_VALUE ? "any budget" : String.format("%.0f", maxBudget)));
+            statusLabel.setVisible(true);
+            resultsArea.setVisible(false);
+            startBtn.setDisable(true);
+            
+            // Convert URI to file path
+            String filePath = new File(java.net.URI.create(searchUrl)).getAbsolutePath();
+            
+            // Run search in background
+            new Thread(() -> {
+                SerpResult result = SerpApiClient.searchByImageWithBudget(filePath, maxBudget);
+                
+                javafx.application.Platform.runLater(() -> {
+                    if (!result.success) {
+                        statusLabel.setText("❌ Error: " + result.errorMessage);
+                    } else if (result.matches.isEmpty()) {
+                        statusLabel.setText("❌ No items found under Rs " + 
+                                (maxBudget == Double.MAX_VALUE ? "any budget" : String.format("%.0f", maxBudget)) 
+                                + ". Try a different image or higher budget!");
+                    } else {
+                        statusLabel.setText("✅ Found " + result.matches.size() + " matching items!");
+                        displaySearchResults(resultsArea, result);
+                        resultsArea.setVisible(true);
+                    }
+                    startBtn.setDisable(false);
+                });
+            }).start();
+        } else {
+            shake(zone);
+        }
+    });
+
+    Button backBtn = backBtn(); 
+    backBtn.setOnAction(e -> fade(this::showHome));
+    
+    // Add all components
+    VBox content = new VBox(24, title, zone, budgetBox, startBtn, statusLabel, resultsScroll);
+    content.setAlignment(Pos.CENTER);
+    content.setPadding(new Insets(24, 40, 30, 40));
+    
+    StackPane.setAlignment(backBtn, Pos.TOP_LEFT);
+    StackPane.setMargin(backBtn, new Insets(12,0,0,12));
+    bg.getChildren().addAll(scrollWrap(content), backBtn);
+    show(bg);
+}
+
+// Helper method to display search results
+private void displaySearchResults(VBox resultsArea, SerpResult result) {
+    resultsArea.getChildren().clear();
+    
+    Label header = new Label("📸 Similar items found:");
+    header.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + TXT_CREAM + ";");
+    resultsArea.getChildren().add(header);
+    
+    int count = 0;
+    for (SerpResult.Match match : result.matches) {
+        if (count >= 5) break;
+        
+        VBox itemBox = new VBox(5);
+        itemBox.setStyle("-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 8; -fx-padding: 10;");
+        
+        Label titleLabel = new Label((count+1) + ". " + match.title);
+        titleLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: " + TXT_CREAM + ";");
+        titleLabel.setWrapText(true);
+        
+        Label priceLabel = new Label("💰 " + (match.price.isEmpty() ? "Price unknown" : match.price));
+        priceLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: " + BTN_LIME + ";");
+        
+        Label sourceLabel = new Label("🛍️ From: " + match.source);
+        sourceLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: " + TXT_LIGHT + ";");
+        
+        // Make link clickable
+        Hyperlink link = new Hyperlink("🔗 View product");
+        link.setStyle("-fx-text-fill: #CCFF00; -fx-font-size: 10px; -fx-cursor: hand;");
+        final String url = match.link;
+        link.setOnAction(ev -> {
+            try {
+                java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
+            } catch (Exception ex) {
+                alert("Could not open link: " + url);
+            }
+        });
+        
+        itemBox.getChildren().addAll(titleLabel, priceLabel, sourceLabel, link);
+        resultsArea.getChildren().add(itemBox);
+        count++;
+    }
+}
+
 
     // ═════════════════════════════════════════════════════════════════════
     // GRID REFRESH
