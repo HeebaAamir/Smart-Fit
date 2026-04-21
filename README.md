@@ -21,5 +21,5 @@
 - **VS Code** - IDE
 -  **Git/GitHub** - Version Control
 - **JavaFX** - for the GUI
-- **Gemini API** - Image Processing
+- **Groq API** - Image Processing & Suggestions.
 - **Web Engine API** - Fetching the results from the Web
