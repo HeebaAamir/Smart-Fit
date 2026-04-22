@@ -346,8 +346,8 @@ public class SmartFitGUI extends Application {
         Label title = screenTitle("My Wardrobe");
         TextField nameF = field("Outfit name", 180);
 
-        final int[] starVal = {3};
-        HBox starPicker = starRow(3, true);
+        final int[] starVal = {0};
+        HBox starPicker = starRow(0, true);
         for (int i = 0; i < 5; i++) {
             final int s = i + 1;
             starPicker.getChildren().get(i).setOnMouseClicked(e -> {
@@ -1189,12 +1189,19 @@ private void showAIPopup() {
     resultArea.setEditable(false);
     resultArea.setWrapText(true);
     resultArea.setPrefHeight(160);
-    resultArea.setStyle("-fx-background-color: #A855F7;"
+    // JavaFX TextArea needs both the outer control AND the inner
+    // .content node styled — otherwise the background shows white.
+    // rgba(140,80,200,0.85) matches CARD_BG but fully opaque for readability.
+    resultArea.setStyle(
+            "-fx-control-inner-background: #C084FC;"
+            + "-fx-background-color: #C084FC;"
             + "-fx-text-fill: " + TXT_CREAM + ";"
             + "-fx-font-size: 12px;"
-            + "-fx-border-color: rgba(255,255,255,0.3);"
+            + "-fx-border-color: rgba(255,255,255,0.35);"
             + "-fx-border-radius: 8;"
-            + "-fx-background-radius: 8;");
+            + "-fx-background-radius: 8;"
+            + "-fx-highlight-fill: #C084FC;"
+            + "-fx-highlight-text-fill: white;");
     
     Button getAdviceBtn = new Button("✨ Get AI Advice");
     getAdviceBtn.setStyle("-fx-background-color:" + BTN_LIME + ";-fx-text-fill:" + BTN_LIME_TXT + ";"
@@ -1277,17 +1284,21 @@ private void showAIPopup() {
     loadingLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: " + TXT_LIGHT + ";");
     loadingLabel.setWrapText(true);
     
-    // Result area - Darker purple for contrast
+    // Result area - matching purple theme
     TextArea adviceArea = new TextArea();
     adviceArea.setEditable(false);
     adviceArea.setWrapText(true);
     adviceArea.setPrefHeight(120);
-    adviceArea.setStyle("-fx-background-color: #A855F7;"
+    adviceArea.setStyle(
+            "-fx-control-inner-background: #C084FC;"
+            + "-fx-background-color: #C084FC;"
             + "-fx-text-fill: " + TXT_CREAM + ";"
             + "-fx-font-size: 11px;"
-            + "-fx-border-color: rgba(255,255,255,0.2);"
+            + "-fx-border-color: rgba(255,255,255,0.35);"
             + "-fx-border-radius: 8;"
-            + "-fx-background-radius: 8;");
+            + "-fx-background-radius: 8;"
+            + "-fx-highlight-fill: #C084FC;"
+            + "-fx-highlight-text-fill: white;");
     
     // Get Advice button
     Button getAdviceBtn = new Button("✨ Get AI Advice");
