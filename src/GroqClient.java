@@ -1,31 +1,23 @@
-import com.google.gson.*;
-import java.net.*;
-import java.net.http.*;
+// AI's assistance was taken to write this class.
+
+import com.google.gson.*; // Converts java objects into JSON format and vice versa
+import java.net.*; // Network-related classes (e.g. URI)
+import java.net.http.*; // For making HTTP requests 
 
 public class GroqClient {
 
-    // ← paste your Groq API key here
+    //paste your Groq API key here
     private static final String API_KEY = "Groq API KEY GOES HERE";
 
     // Groq API endpoint — uses same format as OpenAI
     private static final String API_URL =
         "https://api.groq.com/openai/v1/chat/completions";
 
-    /**
-     * Sends outfit colour details to Groq (Llama 3) and gets
-     * back fashion + colour theory advice.
-     *
-     * @param topColour     colour of the top      e.g. "Red"
-     * @param bottomColour  colour of the bottom   e.g. "Blue"
-     * @param shoeColour    colour of the shoes    e.g. "Black"
-     * @param outerColour   colour of outerwear    or null if none selected
-     * @param accColour     colour of accessory    or null if none selected
-     * @param season        season string          e.g. "Winter"
-     * @return suggestion string to display in the GUI
-     */
+// Send outfit details to Groq and get back fashion advice as bullet points
     public static String getSuggestion(String topColour, String bottomColour,
                                         String shoeColour, String outerColour,
                                         String accColour, String season) {
+        // building the prompt and then sending it over to Groq's API, and finally parsing the response to extract the advice text.                                    
         try {
             // Build the outfit description prompt
             StringBuilder outfitDesc = new StringBuilder();
@@ -39,15 +31,14 @@ public class GroqClient {
             if (season != null)
                 outfitDesc.append(", Season: ").append(season);
 
+            // The prompt we are sending
             String userMessage = "Give me 2-3 short bullet points of fashion and "
                 + "colour theory advice for this outfit: "
                 + outfitDesc
                 + ". Each bullet starts with •. Keep total under 60 words. "
                 + "Be specific about why the colours work or clash.";
 
-            // Groq uses OpenAI-compatible format
-            // "model" can be: llama3-8b-8192, llama3-70b-8192, mixtral-8x7b-32768
-            // llama3-8b-8192 is fastest and free
+            // Building JSON request body
             String requestBody = "{"
                  + "\"model\": \"llama-3.3-70b-versatile\","
                 + "\"messages\": ["
@@ -112,7 +103,7 @@ public class GroqClient {
                 .replace("\t", "\\t");
     }
 
-    // Local fallback when API is unavailable
+    // Local fallback when API is unavailable. The following lines will then be displayed.
     private static String fallbackSuggestion(String top,
                                               String bottom,
                                               String shoe) {

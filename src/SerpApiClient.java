@@ -1,23 +1,25 @@
 import com.google.gson.*;
 import java.net.*;
 import java.net.http.*;
-import java.nio.file.*;
-import java.util.Base64;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.*; // For reading and writing files
+import java.util.Base64; // For encoding image data to Base64 when uploading
+import java.nio.charset.StandardCharsets; // For encoding URL parameters
 
 public class SerpApiClient {
 
     private static final String API_KEY = "API_KEY GOES HERE"; //
     private static final String BASE_URL = "https://serpapi.com/search";
 
+    // Passing our image path and budget (if any) to this method    
     public static SerpResult searchByImage(String imagePath) {
         return searchByImageWithBudget(imagePath, Double.MAX_VALUE);
     }
 
     public static SerpResult searchByImageWithBudget(String imagePath, double maxBudget) {
+    // This method handles the entire flow: uploading the image, sending the search request, and parsing the results while respecting the budget constraint.
     SerpResult result = new SerpResult();
     try {
-        // STEP 1: Upload image to ImgBB and get a public URL
+        // Uploading image to ImgBB and get a public URL
         String imageUrl = ImageUploader.uploadImage(imagePath);
         
         if (imageUrl == null) {
@@ -25,14 +27,14 @@ public class SerpApiClient {
             return result;
         }
         
-        // STEP 2: Send the public URL to SerpApi (NOT the image itself)
+        //  Sending the public URL to SerpApi (created with ImgBB API)
         String url = BASE_URL 
             + "?engine=google_lens"
             + "&api_key=" + API_KEY
             + "&url=" + URLEncoder.encode(imageUrl, StandardCharsets.UTF_8);
         
         System.out.println("🔍 Searching SerpApi...");
-        
+         // Making the HTTP GET request to SerpApi with the image URL
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
@@ -48,7 +50,7 @@ public class SerpApiClient {
             return result;
         }
         
-        // STEP 3: Parse the results
+        // Parsing the result 
         parseResponseWithBudget(response.body(), result, maxBudget);
         result.success = true;
         System.out.println("✅ Found " + result.matches.size() + " matches!");
