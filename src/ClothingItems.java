@@ -146,7 +146,6 @@ class outerwear extends ClothingItems{
     public outerwear(String size, String brand, int price, String fabric, String colour, int WearCount, String season, String ImagePath, String style){
         super(size, brand, price, fabric, colour, WearCount, season,ImagePath);
         this.style = style;
-        this.style = style;
     }
     @Override
     public String getItemType() {
