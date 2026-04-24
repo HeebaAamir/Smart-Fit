@@ -19,8 +19,6 @@ private static final long serialVersionUID = 1L;
         }
     }
 
-    public void getItem(){}
-
     // using built-in functions of Array list to add or remove items (objects)
     public void addItems(ClothingItems item){
         items.add(item);
