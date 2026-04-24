@@ -31,7 +31,9 @@ public class OutfitManager implements Serializable {
         ArrayList<Outfit> result = new ArrayList<>();
         // enhanced for loop to loop through the outfits arraylist and check if any of the clothing items in the outfit matches the item we are looking for, if it does we add it to the result arraylist
         for (Outfit o : outfits) {
-            if (o.getTop().equals(item) || o.getBottom().equals(item) || o.getShoes().equals(item) || o.getAccessories().equals(item) || o.getOuterwear().equals(item)) {
+            if (o.getTop().equals(item) || o.getBottom().equals(item) || o.getShoes().equals(item)
+                    || (o.getAccessories() != null && o.getAccessories().equals(item))
+                    || (o.getOuterwear()   != null && o.getOuterwear().equals(item))) {
         // if the the outfit with particular clothing item is found, adding it to the result arraylist  
                 result.add(o);
             }

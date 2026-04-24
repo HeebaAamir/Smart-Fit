@@ -154,7 +154,9 @@ public class SmartFitGUI extends Application {
         btnWardrobe.setOnAction(e -> fade(this::showAddItem));
         btnSchedule.setOnAction(e -> fade(this::showScheduler));
 
-        HBox row = new HBox(28, btnSearch, btnWardrobe, btnSchedule);
+        Button btnOutfits  = pill("My Outfits", 210, 58);
+        btnOutfits .setOnAction(e -> fade(this::showMyOutfits));
+        HBox row = new HBox(18, btnSearch, btnWardrobe, btnOutfits, btnSchedule);
         row.setAlignment(Pos.CENTER);
 
         VBox body = new VBox(26, title, tagline, row);
@@ -723,6 +725,268 @@ public class SmartFitGUI extends Application {
         show(bg);
     }
 
+
+    // =====================================================================
+    // SCREEN — MY OUTFITS  (OutfitManager.getAllOutfits + findOutfitsWith)
+    // =====================================================================
+    private void showMyOutfits() {
+        StackPane bg = grad();
+        Label title = screenTitle("My Outfits");
+
+        // Stats bar
+        int total = outfitMgr.getTotalOutfits();
+        long rated = outfitMgr.getAllOutfits().stream().filter(o -> o.getRating() > 0).count();
+        double avgRating = outfitMgr.getAllOutfits().stream()
+                .filter(o -> o.getRating() > 0).mapToInt(Outfit::getRating).average().orElse(0);
+        HBox statsRow = new HBox(14,
+            statBadge("Total: " + total),
+            statBadge("Rated: " + rated),
+            statBadge(String.format("Avg: %.1f / 5", avgRating))
+        );
+        statsRow.setAlignment(Pos.CENTER);
+
+        // Search bar — "Find outfits with item brand/colour"
+        TextField searchF = field("Search by brand or colour (press Enter)...", 300);
+        Button clearBtn = new Button("Clear");
+        clearBtn.setStyle("-fx-background-color:rgba(255,255,255,0.18);-fx-text-fill:white;"
+            + "-fx-background-radius:8;-fx-padding:6 12;-fx-cursor:hand;-fx-font-size:11px;");
+        clearBtn.setVisible(false);
+        HBox searchBar = new HBox(8, searchF, clearBtn);
+        searchBar.setAlignment(Pos.CENTER);
+
+        Label filterActiveLbl = new Label("");
+        filterActiveLbl.setStyle("-fx-font-size:11px;-fx-text-fill:" + TXT_CREAM
+            + ";-fx-background-color:rgba(255,255,255,0.12);"
+            + "-fx-background-radius:12;-fx-padding:5 14;");
+        filterActiveLbl.setVisible(false);
+
+        // Sort toggles
+        Label filterLbl = new Label("Sort by:");
+        filterLbl.setStyle("-fx-font-size:11px;-fx-text-fill:" + TXT_DIM + ";-fx-font-weight:bold;");
+        ToggleGroup tg = new ToggleGroup();
+        ToggleButton tbNewest = sortTog("Newest",    tg, true);
+        ToggleButton tbRating = sortTog("Top Rated", tg, false);
+        ToggleButton tbName   = sortTog("A - Z",     tg, false);
+        HBox filterBar = new HBox(8, filterLbl, tbNewest, tbRating, tbName);
+        filterBar.setAlignment(Pos.CENTER);
+
+        VBox gridHolder = new VBox();
+        gridHolder.setAlignment(Pos.CENTER);
+
+        String[] searchQuery = { "" };
+
+        Runnable[] refreshGrid = { null };
+        refreshGrid[0] = () -> {
+            gridHolder.getChildren().clear();
+            String query = searchQuery[0].trim().toLowerCase();
+            ArrayList<Outfit> all;
+
+            if (query.isEmpty()) {
+                all = new ArrayList<>(outfitMgr.getAllOutfits());
+                filterActiveLbl.setVisible(false);
+                clearBtn.setVisible(false);
+            } else {
+                // Search directly across each outfit's items by colour or brand
+                all = new ArrayList<>();
+                for (Outfit o : outfitMgr.getAllOutfits()) {
+                    if (outfitMatchesQuery(o, query)) {
+                        all.add(o);
+                    }
+                }
+                filterActiveLbl.setText("Outfits containing \"" + searchQuery[0].trim()
+                    + "\"  -  " + all.size() + " found");
+                filterActiveLbl.setVisible(true);
+                clearBtn.setVisible(true);
+            }
+
+            if (all.isEmpty()) {
+                Label empty = new Label(query.isEmpty()
+                    ? "No outfits saved yet. Build one in Wardrobe Manager!"
+                    : "No outfits found matching \"" + searchQuery[0].trim() + "\".");
+                empty.setStyle("-fx-font-size:14px;-fx-text-fill:" + TXT_DIM
+                    + ";-fx-text-alignment:center;");
+                empty.setWrapText(true); empty.setAlignment(Pos.CENTER);
+                gridHolder.getChildren().add(empty);
+                return;
+            }
+
+            if (query.isEmpty()) {
+                ToggleButton sel = (ToggleButton) tg.getSelectedToggle();
+                String mode = sel == null ? "Newest" : (String) sel.getUserData();
+                switch (mode) {
+                    case "Top Rated" -> all.sort((a, b) -> b.getRating() - a.getRating());
+                    case "A - Z"     -> all.sort(Comparator.comparing(Outfit::getName,
+                                            String.CASE_INSENSITIVE_ORDER));
+                    default          -> Collections.reverse(all);
+                }
+            }
+
+            javafx.scene.layout.FlowPane grid = new javafx.scene.layout.FlowPane();
+            grid.setHgap(18); grid.setVgap(18);
+            grid.setPadding(new Insets(10));
+            grid.setAlignment(Pos.CENTER);
+            for (Outfit outfit : all) {
+                grid.getChildren().add(outfitCard(outfit, () -> refreshGrid[0].run()));
+            }
+            gridHolder.getChildren().add(grid);
+        };
+
+        searchF.setOnAction(e -> { searchQuery[0] = searchF.getText(); refreshGrid[0].run(); });
+        clearBtn.setOnAction(e -> { searchQuery[0] = ""; searchF.clear(); refreshGrid[0].run(); });
+        tbNewest.setOnAction(e -> { styleTog(tbNewest,true);  styleTog(tbRating,false); styleTog(tbName,false); refreshGrid[0].run(); });
+        tbRating.setOnAction(e -> { styleTog(tbNewest,false); styleTog(tbRating,true);  styleTog(tbName,false); refreshGrid[0].run(); });
+        tbName  .setOnAction(e -> { styleTog(tbNewest,false); styleTog(tbRating,false); styleTog(tbName,true);  refreshGrid[0].run(); });
+
+        refreshGrid[0].run();
+
+        Button backBtn = backBtn();
+        backBtn.setOnAction(e -> fade(this::showHome));
+
+        VBox page = new VBox(14, title, statsRow, searchBar, filterActiveLbl, filterBar, gridHolder);
+        page.setAlignment(Pos.CENTER);
+        page.setPadding(new Insets(14, 30, 30, 30));
+        StackPane.setAlignment(backBtn, Pos.TOP_LEFT);
+        StackPane.setMargin(backBtn, new Insets(10, 0, 0, 10));
+        bg.getChildren().addAll(scrollWrap(page), backBtn);
+        show(bg);
+    }
+
+    /** Single outfit card used in My Outfits grid. */
+    private VBox outfitCard(Outfit outfit, Runnable onDelete) {
+        HBox strip = new HBox(0);
+        strip.setPrefSize(210, 100);
+        strip.setMaxSize(210, 100);
+
+        ClothingItems[] pieces = { outfit.getTop(), outfit.getBottom(), outfit.getShoes() };
+        String[] emos = { "T", "B", "S" };
+
+        for (int i = 0; i < pieces.length; i++) {
+            ClothingItems piece = pieces[i];
+            StackPane slot = new StackPane();
+            slot.setPrefSize(70, 100);
+            if (piece != null && piece.getImagePath() != null) {
+                try {
+                    ImageView iv = new ImageView(new Image(piece.getImagePath(), true));
+                    iv.setFitWidth(70); iv.setFitHeight(100); iv.setPreserveRatio(false);
+                    slot.getChildren().add(iv);
+                } catch (Exception ex) {
+                    slot.getChildren().add(colourSlot(piece, emos[i], 70, 100));
+                }
+            } else if (piece != null) {
+                slot.getChildren().add(colourSlot(piece, emos[i], 70, 100));
+            } else {
+                Rectangle blank = new Rectangle(70, 100);
+                blank.setFill(Color.web("rgba(255,255,255,0.05)"));
+                slot.getChildren().add(blank);
+            }
+            strip.getChildren().add(slot);
+        }
+
+        Label nameLbl = new Label(outfit.getName());
+        nameLbl.setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:white;");
+        nameLbl.setMaxWidth(190); nameLbl.setWrapText(true);
+
+        StringBuilder sb = new StringBuilder();
+        if (outfit.getTop()          != null) sb.append(outfit.getTop().getBrand()).append("  ");
+        if (outfit.getBottom()       != null) sb.append(outfit.getBottom().getBrand()).append("  ");
+        if (outfit.getShoes()        != null) sb.append(outfit.getShoes().getBrand());
+        if (outfit.getOuterwear()    != null) sb.append(" +jacket");
+        if (outfit.getAccessories()  != null) sb.append(" +acc");
+        Label pieceLbl = new Label(sb.toString().trim());
+        pieceLbl.setStyle("-fx-font-size:9px;-fx-text-fill:" + TXT_DIM + ";");
+        pieceLbl.setWrapText(true); pieceLbl.setMaxWidth(190);
+
+        HBox starsDisp = starRow(outfit.getRating(), false);
+
+        Button loadBtn = new Button("Load");
+        loadBtn.setStyle("-fx-background-color:" + BTN_FILL + ";-fx-text-fill:white;"
+            + "-fx-font-size:10px;-fx-font-weight:bold;-fx-background-radius:10;"
+            + "-fx-padding:4 12;-fx-cursor:hand;");
+        loadBtn.setOnAction(e -> {
+            selTop   = outfit.getTop();
+            selBot   = outfit.getBottom();
+            selShoe  = outfit.getShoes();
+            selOuter = outfit.getOuterwear();
+            selAcc   = outfit.getAccessories();
+            fade(this::showTryCombinations);
+        });
+
+        Button deleteBtn = new Button("Delete");
+        deleteBtn.setStyle("-fx-background-color:rgba(220,50,50,0.60);-fx-text-fill:white;"
+            + "-fx-font-size:10px;-fx-background-radius:10;-fx-padding:4 9;-fx-cursor:hand;");
+        deleteBtn.setOnAction(e -> {
+            outfitMgr.deleteOutfit(outfit);
+            FileManager.saveAll(wardrobe, outfitMgr, scheduler);
+            onDelete.run();
+        });
+
+        HBox btnRow = new HBox(8, loadBtn, deleteBtn);
+        btnRow.setAlignment(Pos.CENTER_LEFT);
+
+        VBox info = new VBox(6, nameLbl, pieceLbl, starsDisp, btnRow);
+        info.setPadding(new Insets(10));
+
+        VBox card = new VBox(0, strip, info);
+        card.setPrefWidth(210); card.setMaxWidth(210);
+        card.setStyle("-fx-background-color:rgba(255,255,255,0.10);"
+            + "-fx-background-radius:14;-fx-border-color:rgba(255,255,255,0.18);"
+            + "-fx-border-radius:14;-fx-border-width:1;");
+        card.setOnMouseEntered(e -> card.setStyle("-fx-background-color:rgba(255,255,255,0.17);"
+            + "-fx-background-radius:14;-fx-border-color:rgba(255,255,255,0.45);"
+            + "-fx-border-radius:14;-fx-border-width:1;"));
+        card.setOnMouseExited(e -> card.setStyle("-fx-background-color:rgba(255,255,255,0.10);"
+            + "-fx-background-radius:14;-fx-border-color:rgba(255,255,255,0.18);"
+            + "-fx-border-radius:14;-fx-border-width:1;"));
+        return card;
+    }
+
+    private StackPane colourSlot(ClothingItems item, String label, double w, double h) {
+        Rectangle swatch = new Rectangle(w, h);
+        try { swatch.setFill(Color.web(colHex(item.getColour()))); }
+        catch (Exception ex) { swatch.setFill(Color.web("#555")); }
+        Label lbl = new Label(label);
+        lbl.setStyle("-fx-font-size:13px;-fx-text-fill:white;-fx-font-weight:bold;");
+        StackPane sp = new StackPane(swatch, lbl);
+        sp.setPrefSize(w, h); sp.setMaxSize(w, h);
+        return sp;
+    }
+
+    private Label statBadge(String text) {
+        Label l = new Label(text);
+        l.setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:white;"
+            + "-fx-background-color:rgba(255,255,255,0.15);"
+            + "-fx-background-radius:20;-fx-padding:6 16;");
+        return l;
+    }
+
+
+    /**
+     * Returns true if any clothing item in the outfit matches the search query
+     * by colour OR brand (case-insensitive, partial match).
+     * Null-safe — optional items like outerwear/accessories are skipped if absent.
+     */
+    private boolean outfitMatchesQuery(Outfit o, String query) {
+        return itemMatches(o.getTop(),          query)
+            || itemMatches(o.getBottom(),        query)
+            || itemMatches(o.getShoes(),         query)
+            || itemMatches(o.getOuterwear(),     query)
+            || itemMatches(o.getAccessories(),   query);
+    }
+
+    /** Null-safe check: does this item's brand or colour contain the query? */
+    private boolean itemMatches(ClothingItems item, String query) {
+        if (item == null) return false;
+        return item.getColour().toLowerCase().contains(query)
+            || item.getBrand().toLowerCase().contains(query);
+    }
+
+    private ToggleButton sortTog(String label, ToggleGroup tg, boolean selected) {
+        ToggleButton tb = new ToggleButton(label);
+        tb.setToggleGroup(tg); tb.setUserData(label);
+        tb.setSelected(selected); styleTog(tb, selected);
+        return tb;
+    }
+
     // ═════════════════════════════════════════════════════════════════════
     // SCREEN 6 — OUTFIT SCHEDULER
     // ═════════════════════════════════════════════════════════════════════
@@ -930,6 +1194,42 @@ public class SmartFitGUI extends Application {
     // SCREEN 7 — ONLINE SEARCH
     // (SerpApi integration plugs in here — replace startBtn action)
     // ═════════════════════════════════════════════════════════════════════
+    /*private void showOnlineSearch() {
+        StackPane bg = grad();
+        Label title = screenTitle("Online Search");
+
+        ImageView prev = new ImageView();
+        prev.setFitWidth(480); prev.setFitHeight(260);
+        prev.setPreserveRatio(true); prev.setVisible(false);
+
+        Label hint = new Label("CHOOSE FROM FOLDER OR DRAG IT HERE");
+        hint.setStyle("-fx-font-size:14px;-fx-font-family:'Courier New';"
+                + "-fx-text-fill:" + TXT_LIGHT + ";-fx-letter-spacing:1.5;");
+
+        StackPane zone = dropCard(hint, prev, 580, 300);
+        zone.setOnMouseClicked(e -> {
+            File f = pickImg(); if (f == null) return;
+            searchUrl = f.toURI().toString();
+            showInDrop(prev, hint, searchUrl);
+        });
+        dnd(zone, prev, hint, u -> searchUrl = u);
+
+        Button startBtn = pill("START SEARCHING", 260, 52);
+        // ── TODO: replace this action with SerpApi call (Step 6 of API guide)
+        startBtn.setOnAction(e -> {
+            if (searchUrl != null) fade(this::showOuterAcc);
+            else shake(zone);
+        });
+
+        Button backBtn = backBtn(); backBtn.setOnAction(e -> fade(this::showHome));
+        VBox content = new VBox(24, title, zone, startBtn);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new Insets(24, 40, 30, 40));
+        StackPane.setAlignment(backBtn, Pos.TOP_LEFT);
+        StackPane.setMargin(backBtn, new Insets(12,0,0,12));
+        bg.getChildren().addAll(scrollWrap(content), backBtn);
+        show(bg);
+    }*/
 
     private void showOnlineSearch() {
     StackPane bg = grad();
@@ -1373,6 +1673,29 @@ private void showAIPopup() {
             imgBox.getChildren().setAll(iv);
         }
 
+        // Wear-count badge — top-right corner of the image box
+        int wc = item.getWearCount();
+        Label wearBadge = new Label(wc == 0 ? "New" : "x" + wc);
+        wearBadge.setStyle(
+            "-fx-font-size:9px;-fx-font-weight:bold;-fx-text-fill:white;"
+            + "-fx-background-color:" + (wc == 0
+                ? "rgba(100,100,100,0.75)"
+                : "rgba(224,111,160,0.90)") + ";"
+            + "-fx-background-radius:8;-fx-padding:2 6;");
+        StackPane.setAlignment(wearBadge, Pos.TOP_RIGHT);
+        StackPane.setMargin(wearBadge, new Insets(5, 5, 0, 0));
+        imgBox.getChildren().add(wearBadge);
+
+        // Delete button — top-left, visible only on hover
+        Button delBtn = new Button("X");
+        delBtn.setStyle(
+            "-fx-background-color:rgba(200,40,40,0.82);-fx-text-fill:white;"
+            + "-fx-font-size:9px;-fx-background-radius:8;-fx-padding:2 5;-fx-cursor:hand;");
+        delBtn.setVisible(false);
+        StackPane.setAlignment(delBtn, Pos.TOP_LEFT);
+        StackPane.setMargin(delBtn, new Insets(5, 0, 0, 5));
+        imgBox.getChildren().add(delBtn);
+
         Label brandLbl = new Label(item.getBrand());
         brandLbl.setStyle("-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:white;");
         brandLbl.setMaxWidth(138);
@@ -1380,14 +1703,40 @@ private void showAIPopup() {
         Label detLbl = new Label(item.getColour() + "  ·  " + item.getSize());
         detLbl.setStyle("-fx-font-size:10px;-fx-text-fill:" + TXT_LIGHT + ";");
 
-        Label wearLbl = new Label("Worn " + item.getWearCount() + "×");
-        wearLbl.setStyle("-fx-font-size:9px;-fx-text-fill:" + TXT_DIM + ";");
-
-        VBox card = new VBox(6, imgBox, brandLbl, detLbl, wearLbl);
+        VBox card = new VBox(6, imgBox, brandLbl, detLbl);
         card.setPrefWidth(152); card.setMaxWidth(152);
         card.setPadding(new Insets(10));
         card.setCursor(javafx.scene.Cursor.HAND);
         card.setStyle(cardStyle(false));
+
+        // Show / hide delete button on hover
+        card.setOnMouseEntered(e -> {
+            delBtn.setVisible(true);
+            if (!isSel(item, type)) card.setStyle(cardHov());
+        });
+        card.setOnMouseExited(e -> {
+            delBtn.setVisible(false);
+            card.setStyle(cardStyle(isSel(item, type)));
+        });
+
+        // Delete: confirm, remove from wardrobe, refresh
+        delBtn.setOnAction(e -> {
+            e.consume();
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+            confirm.setTitle("Delete Item");
+            confirm.setHeaderText("Remove \"" + item.getBrand() + " " + item.getColour() + "\" from wardrobe?");
+            confirm.setContentText("This cannot be undone.");
+            confirm.showAndWait().ifPresent(resp -> {
+                if (resp == ButtonType.OK) {
+                    if (isSel(item, type)) desel(type);
+                    wardrobe.removeItems(item);
+                    FileManager.saveAll(wardrobe, outfitMgr, scheduler);
+                    refreshGrid();
+                    refreshPreview();
+                    if (type.equals("outer") || type.equals("acc")) refreshOuterAccGrid();
+                }
+            });
+        });
 
         card.setOnMouseClicked(e -> {
             boolean was = isSel(item, type);
@@ -1399,8 +1748,6 @@ private void showAIPopup() {
                 refreshPreview();
             }
         });
-        card.setOnMouseEntered(e -> { if (!isSel(item,type)) card.setStyle(cardHov()); });
-        card.setOnMouseExited(e  -> card.setStyle(cardStyle(isSel(item, type))));
         return card;
     }
 
