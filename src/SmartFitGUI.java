@@ -107,6 +107,7 @@ public class SmartFitGUI extends Application {
 
     // Calendar month shown in scheduler
     private YearMonth calMonth = YearMonth.now();
+    private Runnable buildCal;
 
     // ═════════════════════════════════════════════════════════════════════
     @Override
@@ -1003,7 +1004,7 @@ public class SmartFitGUI extends Application {
         calGrid.setHgap(6); calGrid.setVgap(6);
         calGrid.setAlignment(Pos.CENTER);
 
-        Runnable buildCal = () -> {
+        buildCal = () -> {
             calGrid.getChildren().clear();
             monthLbl.setText(calMonth.getMonth()
                     .getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "  " + calMonth.getYear());
@@ -1119,6 +1120,7 @@ public class SmartFitGUI extends Application {
             scheduler.addOutfit(date, sel);
             refreshExistingList(existingList, date);
             FileManager.saveAll(wardrobe, outfitMgr, scheduler);
+            if (buildCal != null) buildCal.run();
         });
 
         Button closeBtn = pill("Close", 120, 40);
@@ -1151,6 +1153,8 @@ public class SmartFitGUI extends Application {
             removeBtn.setOnAction(ev -> {
                 scheduler.removeOutfit(date, o);
                 refreshExistingList(existingList, date);
+                FileManager.saveAll(wardrobe, outfitMgr, scheduler);
+                if (buildCal != null) buildCal.run();
             });
             row.getChildren().addAll(oLbl, removeBtn);
             existingList.getChildren().add(row);
@@ -1189,47 +1193,6 @@ public class SmartFitGUI extends Application {
             list.getChildren().add(none);
         }
     }
-
-    // ═════════════════════════════════════════════════════════════════════
-    // SCREEN 7 — ONLINE SEARCH
-    // (SerpApi integration plugs in here — replace startBtn action)
-    // ═════════════════════════════════════════════════════════════════════
-    /*private void showOnlineSearch() {
-        StackPane bg = grad();
-        Label title = screenTitle("Online Search");
-
-        ImageView prev = new ImageView();
-        prev.setFitWidth(480); prev.setFitHeight(260);
-        prev.setPreserveRatio(true); prev.setVisible(false);
-
-        Label hint = new Label("CHOOSE FROM FOLDER OR DRAG IT HERE");
-        hint.setStyle("-fx-font-size:14px;-fx-font-family:'Courier New';"
-                + "-fx-text-fill:" + TXT_LIGHT + ";-fx-letter-spacing:1.5;");
-
-        StackPane zone = dropCard(hint, prev, 580, 300);
-        zone.setOnMouseClicked(e -> {
-            File f = pickImg(); if (f == null) return;
-            searchUrl = f.toURI().toString();
-            showInDrop(prev, hint, searchUrl);
-        });
-        dnd(zone, prev, hint, u -> searchUrl = u);
-
-        Button startBtn = pill("START SEARCHING", 260, 52);
-        // ── TODO: replace this action with SerpApi call (Step 6 of API guide)
-        startBtn.setOnAction(e -> {
-            if (searchUrl != null) fade(this::showOuterAcc);
-            else shake(zone);
-        });
-
-        Button backBtn = backBtn(); backBtn.setOnAction(e -> fade(this::showHome));
-        VBox content = new VBox(24, title, zone, startBtn);
-        content.setAlignment(Pos.CENTER);
-        content.setPadding(new Insets(24, 40, 30, 40));
-        StackPane.setAlignment(backBtn, Pos.TOP_LEFT);
-        StackPane.setMargin(backBtn, new Insets(12,0,0,12));
-        bg.getChildren().addAll(scrollWrap(content), backBtn);
-        show(bg);
-    }*/
 
     private void showOnlineSearch() {
     StackPane bg = grad();
