@@ -67,7 +67,7 @@ SmartFit uses Java Serialization to ensure no data is lost between sessions.
 5. On relaunch, FileManager deserializes the .ser files and fully restores the application to its last saved state
 ---
 # Current Limitations : 
-1. Our SerpAPI is unable to fetch price of items from websites.
+1. Our SerpAPI is rarely fetches price of items from websites.
 2. There is no input validation implemented. Users can input a bottom at top section and the program will take it.
 3. When assigning outfits to a date, user can only see the name of outfit rather the whole fit.
 4. User can currently select one accessory per outfit.
