@@ -48,8 +48,9 @@
 # How To Run :
 **Requirements :**  
 1. Java 17+ and JavaFX sdk should be installed.
-2. Generate API keys from SerpAPI, ImageBB and GroqAPI websites and use them in the relevant spaces.
-3. Run these comands to compile and run :
+2. Clone this repository onto your system.
+3. Generate API keys from SerpAPI, ImageBB and GroqAPI websites and use them in the relevant spaces.
+4. Run these comands to compile and run :
 ```bash
 # Compile    
 javac --module-path /path/to/javafx/lib --add-modules javafx.controls,javafx.fxml -cp "src/gson-2.10.1.jar" *.java    
