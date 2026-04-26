@@ -41,8 +41,9 @@
 - **VS Code** - IDE
 -  **Git/GitHub** - Version Control
 - **JavaFX** - for the GUI
-- **Groq API** - Image Processing & Suggestions.
-- **Web Engine API** - Fetching the results from the Web
+- **Groq API** - Image Processing & Suggestions
+- **ImgBB API** - Creating public URLs of our local images. 
+- **Serp API** - Fetching the results from the Web
 ---
 # How To Run :
 **Requirements :**  
